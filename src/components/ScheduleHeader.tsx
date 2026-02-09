@@ -1,5 +1,5 @@
 import { allWorlds } from "@/data/scheduleData";
-import { getPHTime } from "@/lib/timeUtils";
+import { getServerDate, ServerRegion, servers } from "@/lib/timeUtils";
 import { useEffect, useState } from "react";
 
 interface Props {
@@ -7,17 +7,20 @@ interface Props {
   setWorldFilter: (w: string) => void;
   search: string;
   setSearch: (s: string) => void;
+  server: ServerRegion;
+  setServer: (s: ServerRegion) => void;
 }
 
-export function ScheduleHeader({ worldFilter, setWorldFilter, search, setSearch }: Props) {
-  const [clock, setClock] = useState(getPHTime());
+export function ScheduleHeader({ worldFilter, setWorldFilter, search, setSearch, server, setServer }: Props) {
+  const utcOffset = servers[server].utcOffset;
+  const [clock, setClock] = useState(getServerDate(utcOffset));
 
   useEffect(() => {
-    const interval = setInterval(() => setClock(getPHTime()), 1000);
+    const interval = setInterval(() => setClock(getServerDate(utcOffset)), 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [utcOffset]);
 
-  const timeStr = clock.toLocaleTimeString("en-PH", {
+  const timeStr = clock.toLocaleTimeString("en-US", {
     hour: "2-digit",
     minute: "2-digit",
     second: "2-digit",
@@ -33,12 +36,22 @@ export function ScheduleHeader({ worldFilter, setWorldFilter, search, setSearch 
               MIR4 Schedule Guide
             </h1>
             <p className="text-xs text-muted-foreground font-body">
-              EU Server · PH Time:{" "}
+              {servers[server].label} · Server Time:{" "}
               <span className="text-gold-light font-semibold">{timeStr}</span>
             </p>
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
+            <select
+              value={server}
+              onChange={(e) => setServer(e.target.value as ServerRegion)}
+              className="bg-secondary text-secondary-foreground border border-border rounded px-3 py-1.5 text-sm font-display focus:outline-none focus:ring-1 focus:ring-ring"
+            >
+              {(Object.keys(servers) as ServerRegion[]).map((s) => (
+                <option key={s} value={s}>{servers[s].label}</option>
+              ))}
+            </select>
+
             <select
               value={worldFilter}
               onChange={(e) => setWorldFilter(e.target.value)}

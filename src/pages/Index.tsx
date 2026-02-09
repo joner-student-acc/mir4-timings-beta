@@ -1,22 +1,30 @@
 import { useState, useEffect, useMemo } from "react";
-import { worldBosses, specialAreas, events, allWorlds, BossEntry, SpecialArea, EventEntry } from "@/data/scheduleData";
+import { worldBosses, specialAreas, events, allWorlds, EventEntry } from "@/data/scheduleData";
 import { ScheduleHeader } from "@/components/ScheduleHeader";
 import { StatusBadge } from "@/components/StatusBadge";
-import { formatTime, getTimesStatuses, getRowStatus, getPHHourMin, ScheduleStatus } from "@/lib/timeUtils";
+import { formatTime, convertTime, getTimesStatuses, getRowStatus, getServerTime, ScheduleStatus, ServerRegion, servers } from "@/lib/timeUtils";
 import { cn } from "@/lib/utils";
+
+/** The schedule data is stored in ASIA (UTC+8) times. We convert to selected server. */
+const DATA_OFFSET = 8; // ASIA UTC+8
 
 type UnifiedRow = {
   type: "boss" | "special" | "event";
   name: string;
-  subName: string; // map, period, or area label
+  subName: string;
   world?: string;
   timesDisplay: { label: string; status: ScheduleStatus }[];
   rowStatus: ScheduleStatus;
 };
 
-function getEventStatus(event: EventEntry, currentMin: number): ScheduleStatus {
-  const start = event.startHour * 60 + event.startMin;
-  const end = event.endHour * 60 + event.endMin;
+function getEventStatus(event: EventEntry, currentMin: number, serverOffset: number): ScheduleStatus {
+  // Convert event hours from DATA_OFFSET to server offset
+  const diff = serverOffset - DATA_OFFSET;
+  let startH = ((event.startHour + diff) % 24 + 24) % 24;
+  let endH = ((event.endHour + diff) % 24 + 24) % 24;
+  const start = startH * 60 + event.startMin;
+  const end = endH * 60 + event.endMin;
+
   if (end <= start) {
     if (currentMin >= start || currentMin < end) return "ongoing";
     if (currentMin < start) return "upcoming";
@@ -27,11 +35,27 @@ function getEventStatus(event: EventEntry, currentMin: number): ScheduleStatus {
   return "finished";
 }
 
+function formatEventTimes(event: EventEntry, serverOffset: number): string {
+  const diff = serverOffset - DATA_OFFSET;
+  const startH = ((event.startHour + diff) % 24 + 24) % 24;
+  const endH = ((event.endHour + diff) % 24 + 24) % 24;
+  const fmt = (h: number, m: number) => {
+    const ampm = h >= 12 ? "PM" : "AM";
+    const h12 = h % 12 || 12;
+    return `${h12}:${String(m).padStart(2, "0")} ${ampm}`;
+  };
+  if (event.startHour === event.endHour && event.startMin === event.endMin) {
+    return fmt(startH, event.startMin);
+  }
+  return `${fmt(startH, event.startMin)} – ${fmt(endH, event.endMin)}`;
+}
+
 const statusOrder: Record<ScheduleStatus, number> = { ongoing: 0, upcoming: 1, finished: 2 };
 
 const Index = () => {
   const [worldFilter, setWorldFilter] = useState("ALL");
   const [search, setSearch] = useState("");
+  const [server, setServer] = useState<ServerRegion>("ASIA");
   const [, setTick] = useState(0);
 
   useEffect(() => {
@@ -39,67 +63,66 @@ const Index = () => {
     return () => clearInterval(interval);
   }, []);
 
+  const serverOffset = servers[server].utcOffset;
   const searchLower = search.toLowerCase();
-  const { hour, min } = getPHHourMin();
+  const { hour, min } = getServerTime(serverOffset);
   const currentMin = hour * 60 + min;
 
   const rows = useMemo(() => {
     const result: UnifiedRow[] = [];
 
-    // World bosses
     worldBosses.forEach((b) => {
       if (worldFilter !== "ALL" && b.world !== worldFilter) return;
       if (searchLower && !b.boss.toLowerCase().includes(searchLower) && !b.map.toLowerCase().includes(searchLower)) return;
-      const statuses = getTimesStatuses(b.times, currentMin);
+      // Convert times from DATA_OFFSET to server offset
+      const converted = b.times.map((t) => convertTime(t, DATA_OFFSET, serverOffset));
+      const statuses = getTimesStatuses(converted, currentMin);
       result.push({
         type: "boss",
         name: b.boss,
         subName: b.map,
         world: b.world,
-        timesDisplay: b.times.map((t, i) => ({ label: formatTime(t), status: statuses[i] })),
+        timesDisplay: converted.map((t, i) => ({ label: formatTime(t), status: statuses[i] })),
         rowStatus: getRowStatus(statuses),
       });
     });
 
-    // Special areas
     if (worldFilter === "ALL") {
       specialAreas.forEach((a) => {
         if (searchLower && !a.name.toLowerCase().includes(searchLower)) return;
-        const statuses = getTimesStatuses(a.times, currentMin);
+        const converted = a.times.map((t) => convertTime(t, DATA_OFFSET, serverOffset));
+        const statuses = getTimesStatuses(converted, currentMin);
         result.push({
           type: "special",
           name: a.name,
           subName: "Special Area",
-          timesDisplay: a.times.map((t, i) => ({ label: formatTime(t), status: statuses[i] })),
+          timesDisplay: converted.map((t, i) => ({ label: formatTime(t), status: statuses[i] })),
           rowStatus: getRowStatus(statuses),
         });
       });
 
-      // Events
       events.forEach((e) => {
         if (searchLower && !e.name.toLowerCase().includes(searchLower)) return;
-        const status = getEventStatus(e, currentMin);
+        const status = getEventStatus(e, currentMin, serverOffset);
         result.push({
           type: "event",
           name: e.name,
           subName: e.period || "Event",
-          timesDisplay: [{ label: e.times, status }],
+          timesDisplay: [{ label: formatEventTimes(e, serverOffset), status }],
           rowStatus: status,
         });
       });
     }
 
-    // Sort by status: ongoing → upcoming → finished
     result.sort((a, b) => statusOrder[a.rowStatus] - statusOrder[b.rowStatus]);
     return result;
-  }, [worldFilter, searchLower, currentMin]);
+  }, [worldFilter, searchLower, currentMin, serverOffset]);
 
-  const grouped = useMemo(() => {
-    const ongoing = rows.filter((r) => r.rowStatus === "ongoing");
-    const upcoming = rows.filter((r) => r.rowStatus === "upcoming");
-    const finished = rows.filter((r) => r.rowStatus === "finished");
-    return { ongoing, upcoming, finished };
-  }, [rows]);
+  const grouped = useMemo(() => ({
+    ongoing: rows.filter((r) => r.rowStatus === "ongoing"),
+    upcoming: rows.filter((r) => r.rowStatus === "upcoming"),
+    finished: rows.filter((r) => r.rowStatus === "finished"),
+  }), [rows]);
 
   const renderTable = (items: UnifiedRow[], label: string, status: ScheduleStatus) => {
     if (items.length === 0) return null;
@@ -149,7 +172,7 @@ const Index = () => {
                           "inline-block px-1.5 py-0.5 rounded text-xs",
                           t.status === "ongoing" && "bg-ongoing/20 text-ongoing-foreground font-bold",
                           t.status === "upcoming" && "bg-upcoming/15 text-upcoming-foreground font-semibold",
-                          t.status === "finished" && "text-finished-foreground line-through opacity-60",
+                          t.status === "finished" && "text-finished-foreground opacity-60",
                         )}>
                           {t.label}
                         </span>
@@ -172,6 +195,8 @@ const Index = () => {
         setWorldFilter={setWorldFilter}
         search={search}
         setSearch={setSearch}
+        server={server}
+        setServer={setServer}
       />
       <main className="container py-6 space-y-6">
         {renderTable(grouped.ongoing, "Ongoing Now", "ongoing")}
@@ -184,7 +209,7 @@ const Index = () => {
 
         <footer className="text-center py-8 text-muted-foreground text-xs font-body">
           <div className="ornament-line mx-auto w-32 mb-3" />
-          MIR4 Schedule Guide · EU Server · All times in PH Time (UTC+8)
+          MIR4 Schedule Guide · {servers[server].label} · All times converted to server time
         </footer>
       </main>
     </div>

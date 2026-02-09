@@ -1,19 +1,32 @@
-/**
- * Get current PH time (UTC+8)
- */
-export function getPHTime(): Date {
-  const now = new Date();
-  // Convert to UTC then add 8 hours
-  const utc = now.getTime() + now.getTimezoneOffset() * 60000;
-  return new Date(utc + 8 * 3600000);
+export type ServerRegion = "ASIA" | "INMENA" | "EU" | "SA" | "NA";
+
+export interface ServerInfo {
+  label: string;
+  utcOffset: number; // hours from UTC
 }
 
+export const servers: Record<ServerRegion, ServerInfo> = {
+  ASIA: { label: "[ASIA] UTC+8", utcOffset: 8 },
+  INMENA: { label: "[INMENA] UTC+6", utcOffset: 6 },
+  EU: { label: "[EU] UTC+2", utcOffset: 2 },
+  SA: { label: "[SA] UTC-3", utcOffset: -3 },
+  NA: { label: "[NA] UTC-4", utcOffset: -4 },
+};
+
 /**
- * Get current PH hour and minute
+ * Get current time in a given UTC offset as hours & minutes
  */
-export function getPHHourMin(): { hour: number; min: number } {
-  const ph = getPHTime();
-  return { hour: ph.getHours(), min: ph.getMinutes() };
+export function getServerTime(utcOffset: number): { hour: number; min: number } {
+  const now = new Date();
+  const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+  const serverDate = new Date(utc + utcOffset * 3600000);
+  return { hour: serverDate.getHours(), min: serverDate.getMinutes() };
+}
+
+export function getServerDate(utcOffset: number): Date {
+  const now = new Date();
+  const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+  return new Date(utc + utcOffset * 3600000);
 }
 
 /**
@@ -22,6 +35,17 @@ export function getPHHourMin(): { hour: number; min: number } {
 export function toMinutes(time: string): number {
   const [h, m] = time.split(":").map(Number);
   return h * 60 + m;
+}
+
+/**
+ * Convert a time "HH:MM" from one UTC offset to another, returning new "HH:MM"
+ */
+export function convertTime(time: string, fromOffset: number, toOffset: number): string {
+  const [h, m] = time.split(":").map(Number);
+  let newH = h + (toOffset - fromOffset);
+  // Wrap around 24h
+  newH = ((newH % 24) + 24) % 24;
+  return `${String(newH).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
 
 /**
@@ -37,25 +61,6 @@ export function formatTime(time: string): string {
 export type ScheduleStatus = "ongoing" | "upcoming" | "finished";
 
 /**
- * Determine the status of a boss spawn time.
- * "ongoing" = within 30 min window of spawn
- * "upcoming" = the next spawn in the list
- * "finished" = past spawns
- */
-export function getBossTimeStatus(
-  spawnTime: string,
-  currentMinutes: number
-): ScheduleStatus {
-  const spawn = toMinutes(spawnTime);
-  const diff = spawn - currentMinutes;
-  // Ongoing: within 0-29 min after spawn
-  if (diff <= 0 && diff > -30) return "ongoing";
-  if (diff >= -30 && diff < 0) return "ongoing";
-  if (diff > 0) return "upcoming";
-  return "finished";
-}
-
-/**
  * Find the next upcoming time index from a list of "HH:MM" times
  */
 export function getNextUpcomingIndex(times: string[], currentMinutes: number): number {
@@ -63,7 +68,7 @@ export function getNextUpcomingIndex(times: string[], currentMinutes: number): n
     const spawn = toMinutes(times[i]);
     if (spawn > currentMinutes) return i;
   }
-  return -1; // all finished for today
+  return -1;
 }
 
 /**
@@ -78,11 +83,8 @@ export function getTimesStatuses(
   return times.map((t, i) => {
     const spawn = toMinutes(t);
     const diff = currentMinutes - spawn;
-    // Ongoing: currently within 30 min of spawn
     if (diff >= 0 && diff < 30) return "ongoing";
-    // If this is the next upcoming
     if (i === nextIdx) return "upcoming";
-    // If spawn is in the future
     if (spawn > currentMinutes) return "upcoming";
     return "finished";
   });

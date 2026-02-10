@@ -31,32 +31,32 @@ function p(t: string): string {
 
 export const worldBosses: BossEntry[] = [
   // W1
-  { world: "W1", map: "Demon Bull Temple 1F", boss: "Boltox", times: ["7:00 AM","9:00 AM","11:00 AM","1:00 PM","3:00 PM","5:00 PM"].map(p) },
-  { world: "W1", map: "Bullface Forest", boss: "Mata", times: ["8:00 AM","10:00 AM","12:00 PM","2:00 PM","4:00 PM","6:00 PM"].map(p) },
-  { world: "W1", map: "Bullface Fiend King's Sanctuary", boss: "Bullface Fiend King", times: ["12:00 PM","3:00 PM","6:00 PM"].map(p) },
-  { world: "W1", map: "Whitemaur Sealing Circle", boss: "Yeo Wihuang", times: ["7:00 AM","11:00 AM","3:00 PM","5:00 PM"].map(p) },
+  { world: "W1", map: "Demon Bull Temple 1F", boss: "Boltox", times: ["7:00 AM","9:00 AM","11:00 AM","1:00 PM","3:00 PM","5:00 PM", "7:00 PM", "9:00 PM", "11:00 PM", "1:00 AM", "3:00 AM", "5:00 AM"].map(p) },
+  { world: "W1", map: "Bullface Forest", boss: "Mata", times: ["8:00 AM","10:00 AM","12:00 PM","2:00 PM","4:00 PM","6:00 PM","8:00 PM","10:00 PM","12:00 AM","2:00 AM","4:00 AM","6:00 AM"].map(p) },
+  { world: "W1", map: "Bullface Fiend King's Sanctuary", boss: "Bullface Fiend King", times: ["12:00 PM","3:00 PM","6:00 PM","12:00 AM","3:00 AM","6:00 AM"].map(p) },
+  { world: "W1", map: "Whitemaur Sealing Circle", boss: "Yeo Wihuang", times: ["7:00 AM","11:00 AM","3:00 PM","5:00 PM","7:00 PM","11:00 PM","3:00 AM","5:00 AM"].map(p) },
   // W7
-  { world: "W7", map: "Redmoon Gorge 2F", boss: "Taehyul", times: ["7:00 AM","11:00 AM","3:00 PM","5:00 PM"].map(p) },
-  { world: "W7", map: "Demonic Cult Main Hall", boss: "Yiun", times: ["8:00 AM","11:00 AM","2:00 PM","5:00 PM"].map(p) },
+  { world: "W7", map: "Redmoon Gorge 2F", boss: "Taehyul", times: ["7:00 AM","11:00 AM","3:00 PM","7:00 PM","11:00 PM","3:00 AM"].map(p) },
+  { world: "W7", map: "Demonic Cult Main Hall", boss: "Yiun", times: ["8:00 AM","11:00 AM","2:00 PM","5:00 PM","8:00 PM","11:00 PM","2:00 AM","5:00 AM"].map(p) },
   // W4
-  { world: "W4", map: "Phantasia Desert", boss: "Nefarior Obdurate Zenith", times: ["8:00 AM","10:00 AM","12:00 PM","2:00 PM","4:00 PM","6:00 PM"].map(p) },
-  { world: "W4", map: "Overlord Sealing Circle", boss: "Kurilaica", times: ["9:00 AM","12:00 PM","3:00 PM","6:00 PM"].map(p) },
+  { world: "W4", map: "Phantasia Desert", boss: "Nefarior Obdurate Zenith", times: ["8:00 AM","10:00 AM","12:00 PM","2:00 PM","4:00 PM","6:00 PM","8:00 PM","10:00 PM","12:00 AM","2:00 AM","4:00 AM","6:00 AM"].map(p) },
+  { world: "W4", map: "Overlord Sealing Circle", boss: "Kurilaica", times: ["9:00 AM","12:00 PM","3:00 PM","6:00 PM","9:00 PM","12:00 AM","3:00 AM","6:00 AM"].map(p) },
   // W2
-  { world: "W2", map: "Redmoon Mountain", boss: "Juhui", times: ["8:30 AM","11:30 AM","2:30 PM","5:30 PM"].map(p) },
+  { world: "W2", map: "Redmoon Mountain", boss: "Juhui", times: ["8:30 AM","11:30 AM","2:30 PM","5:30 PM","8:30 PM","11:30 PM","2:30 AM","5:30 AM"].map(p) },
   // W5
-  { world: "W5", map: "Great Sabuk Wall Camp", boss: "Faluk", times: ["9:30 AM","12:30 PM","3:30 PM","6:00 PM"].map(p) },
-  { world: "W5", map: "Illusion Temple", boss: "Tale Warper Fiend", times: ["7:30 AM","10:30 AM","1:30 PM","4:30 PM"].map(p) },
+  { world: "W5", map: "Great Sabuk Wall Camp", boss: "Faluk", times: ["9:30 AM","12:30 PM","3:30 PM","6:00 PM","9:30 PM","12:30 AM","3:30 AM","6:00 AM"].map(p) },
+  { world: "W5", map: "Illusion Temple", boss: "Tale Warper Fiend", times: ["7:30 AM","10:30 AM","1:30 PM","4:30 PM","7:30 PM","10:30 PM","1:30 AM","4:30 AM"].map(p) },
   // W3
-  { world: "W3", map: "Viperbeast Plain", boss: "Dusk Armado Emperor", times: ["7:30 AM","9:30 AM","11:30 AM","1:30 PM","3:30 PM","5:30 PM"].map(p) },
-  { world: "W3", map: "Rockcut Tomb", boss: "Mara", times: ["8:30 AM","11:30 AM","2:30 PM","5:30 PM"].map(p) },
-  { world: "W3", map: "Nefarior Necropolis", boss: "Tombbeast Gyo", times: ["8:30 AM","2:30 PM"].map(p) },
-  { world: "W3", map: "Rockcut Tomb", boss: "Boodo", times: ["9:30 AM","3:30 PM"].map(p) },
+  { world: "W3", map: "Viperbeast Plain", boss: "Dusk Armado Emperor", times: ["7:30 AM","9:30 AM","11:30 AM","1:30 PM","3:30 PM","5:30 PM","7:30 PM","9:30 PM","11:30 PM","1:30 AM","3:30 AM","5:30 AM"].map(p) },
+  { world: "W3", map: "Rockcut Tomb", boss: "Mara", times: ["8:30 AM","11:30 AM","2:30 PM","5:30 PM","8:30 PM","11:30 PM","2:30 AM","5:30 AM"].map(p) },
+  { world: "W3", map: "Nefarior Necropolis", boss: "Tombbeast Gyo", times: ["8:30 AM","2:30 PM","8:30 PM","2:30 AM"].map(p) },
+  { world: "W3", map: "Rockcut Tomb", boss: "Boodo", times: ["9:30 AM","3:30 PM","9:30 PM","3:30 AM"].map(p) },
   // W6
-  { world: "W6", map: "Bicheon Town", boss: "Cheol Mokgang", times: ["8:30 AM","10:30 AM","12:30 PM","2:30 PM","4:30 PM","6:30 PM"].map(p) },
-  { world: "W6", map: "Demoniac Mine", boss: "Hong Yeo", times: ["7:30 AM","9:30 AM","11:30 AM","1:30 PM","3:30 PM","5:30 PM"].map(p) },
-  { world: "W6", map: "Bicheon Town", boss: "Bicheon Sura", times: ["10:30 AM","4:30 PM"].map(p) },
-  { world: "W6", map: "Phantom Woods", boss: "Wuihan", times: ["11:30 AM","5:30 PM"].map(p) },
-  { world: "W6", map: "Bicheon Labyrinth", boss: "Obscene Yeticlops", times: ["12:30 PM","6:30 PM"].map(p) },
+  { world: "W6", map: "Bicheon Town", boss: "Cheol Mokgang", times: ["8:30 AM","10:30 AM","12:30 PM","2:30 PM","4:30 PM","6:30 PM","8:30 PM","10:30 PM","12:30 AM","2:30 AM","4:30 AM","6:30 AM"].map(p) },
+  { world: "W6", map: "Demoniac Mine", boss: "Hong Yeo", times: ["7:30 AM","9:30 AM","11:30 AM","1:30 PM","3:30 PM","5:30 PM","7:30 PM","9:30 PM","11:30 PM","1:30 AM","3:30 AM","5:30 AM"].map(p) },
+  { world: "W6", map: "Bicheon Town", boss: "Bicheon Sura", times: ["10:30 AM","4:30 PM","10:30 PM","4:30 AM"].map(p) },
+  { world: "W6", map: "Phantom Woods", boss: "Wuihan", times: ["11:30 AM","5:30 PM","11:30 PM","5:30 AM"].map(p) },
+  { world: "W6", map: "Bicheon Labyrinth", boss: "Obscene Yeticlops", times: ["12:30 PM","6:30 PM","12:30 AM","6:30 AM"].map(p) },
 ];
 
 export const specialAreas: SpecialArea[] = [

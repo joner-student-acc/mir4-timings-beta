@@ -92,6 +92,8 @@ const Index = () => {
 
   useEffect(() => {
     localStorage.setItem("mir4-viewing-offset", JSON.stringify(viewingOffset));
+    localStorage.setItem("mir4-viewing-mode", JSON.stringify(viewingMode));
+  }, [viewingOffset, viewingMode]);
   }, [viewingOffset]);
 
   useEffect(() => {

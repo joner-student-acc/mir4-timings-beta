@@ -1,5 +1,5 @@
 import { allWorlds } from "@/data/scheduleData";
-import { getServerDate, ServerRegion, servers, viewingTimezones, formatUtcOffset } from "@/lib/timeUtils";
+import { getServerDate, ServerRegion, servers, viewingTimezones, formatUtcOffset, AUTO_DETECT_VALUE, detectLocalUtcOffset } from "@/lib/timeUtils";
 import { useEffect, useState } from "react";
 
 interface Props {
@@ -11,11 +11,14 @@ interface Props {
   setServer: (s: ServerRegion) => void;
   viewingOffset: number;
   setViewingOffset: (o: number) => void;
+  viewingMode: string;
+  setViewingMode: (m: string) => void;
 }
 
 export function ScheduleHeader({
   worldFilter, setWorldFilter, search, setSearch,
   server, setServer, viewingOffset, setViewingOffset,
+  viewingMode, setViewingMode,
 }: Props) {
   const viewingTzOffset = viewingOffset;
   const [clock, setClock] = useState(getServerDate(viewingTzOffset));
@@ -32,7 +35,9 @@ export function ScheduleHeader({
     hour12: true,
   });
 
-  const viewingLabel = viewingTimezones.find(tz => tz.utcOffset === viewingOffset)?.label ?? formatUtcOffset(viewingOffset);
+  const viewingLabel = viewingMode === AUTO_DETECT_VALUE
+    ? `Auto (${formatUtcOffset(viewingOffset)})`
+    : viewingTimezones.find(tz => tz.utcOffset === viewingOffset)?.label ?? formatUtcOffset(viewingOffset);
 
   return (
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b border-border">
@@ -70,10 +75,19 @@ export function ScheduleHeader({
             <div className="flex flex-col gap-0.5">
               <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-display">Select Viewing Region</label>
               <select
-                value={viewingOffset}
-                onChange={(e) => setViewingOffset(parseFloat(e.target.value))}
+                value={viewingMode}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setViewingMode(val);
+                  if (val === AUTO_DETECT_VALUE) {
+                    setViewingOffset(detectLocalUtcOffset());
+                  } else {
+                    setViewingOffset(parseFloat(val));
+                  }
+                }}
                 className="bg-secondary text-secondary-foreground border border-border rounded px-3 py-1.5 text-sm font-display focus:outline-none focus:ring-1 focus:ring-ring"
               >
+                <option value={AUTO_DETECT_VALUE}>Auto (Detect My Timezone)</option>
                 {viewingTimezones.map((tz) => (
                   <option key={tz.utcOffset} value={tz.utcOffset}>{tz.label}</option>
                 ))}

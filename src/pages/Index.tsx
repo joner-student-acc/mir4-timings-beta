@@ -209,7 +209,7 @@ const Index = () => {
 
         <footer className="text-center py-8 text-muted-foreground text-xs font-body">
           <div className="ornament-line mx-auto w-32 mb-3" />
-          MIR4 Schedule Guide · {servers[server].label} · All times converted to server time
+          MIR4 Timing Guide · {servers[server].label} · All times converted to server time
         </footer>
       </main>
     </div>

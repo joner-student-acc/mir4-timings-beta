@@ -33,7 +33,7 @@ export function ScheduleHeader({ worldFilter, setWorldFilter, search, setSearch,
         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
           <div className="flex-1 min-w-0">
             <h1 className="text-xl sm:text-2xl font-display font-bold text-gold gold-glow tracking-wide">
-              MIR4 Schedule Guide
+              MIR4 Timing Guide
             </h1>
             <p className="text-xs text-muted-foreground font-body">
               {servers[server].label} · Server Time:{" "}

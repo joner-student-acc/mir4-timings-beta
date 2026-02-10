@@ -48,7 +48,7 @@ export function ScheduleHeader({
               <h1 className="text-xl sm:text-2xl font-display font-bold text-gold gold-glow tracking-wide">
                 MIR4 Timing Guide
               </h1>
-              <p className="text-xs text-muted-foreground font-body">
+              <p className="text-sm text-muted-foreground font-body">
                 Server: <span className="text-gold-light font-semibold">{servers[server].label}</span>
                 {" → "}
                 Viewing: <span className="text-gold-light font-semibold">{viewingLabel}</span>
@@ -60,7 +60,7 @@ export function ScheduleHeader({
 
           <div className="flex items-center gap-2 flex-wrap">
             <div className="flex flex-col gap-0.5">
-              <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-display">Select Server</label>
+              <label className="text-sm uppercase tracking-wider text-muted-foreground font-display">Select Server</label>
               <select
                 value={server}
                 onChange={(e) => setServer(e.target.value as ServerRegion)}
@@ -73,7 +73,7 @@ export function ScheduleHeader({
             </div>
 
             <div className="flex flex-col gap-0.5">
-              <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-display">Select Viewing Region</label>
+              <label className="text-sm uppercase tracking-wider text-muted-foreground font-display">Select Viewing Region</label>
               <select
                 value={viewingMode}
                 onChange={(e) => {
@@ -95,7 +95,7 @@ export function ScheduleHeader({
             </div>
 
             <div className="flex flex-col gap-0.5">
-              <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-display">World</label>
+              <label className="text-sm uppercase tracking-wider text-muted-foreground font-display">World</label>
               <select
                 value={worldFilter}
                 onChange={(e) => setWorldFilter(e.target.value)}
@@ -109,7 +109,7 @@ export function ScheduleHeader({
             </div>
 
             <div className="flex flex-col gap-0.5">
-              <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-display">Search</label>
+              <label className="text-sm uppercase tracking-wider text-muted-foreground font-display">Search</label>
               <input
                 type="text"
                 placeholder="Search boss or event..."

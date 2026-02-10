@@ -196,9 +196,9 @@ const Index = () => {
           <p className="text-center text-muted-foreground py-8 font-body text-lg">No entries match your filter.</p>
         )}
 
-        <footer className="text-center py-8 text-muted-foreground text-xs font-body">
+        <footer className="text-center py-8 text-muted-foreground text-sm font-body">
           <div className="ornament-line mx-auto w-32 mb-3" />
-          MIR4 Timing Guide · {servers[server].label} → {formatUtcOffset(viewingOffset)} · All times converted
+          MIR4 Timing Guide by Striker` · © 2026 All rights reserved.
         </footer>
       </main>
     </div>

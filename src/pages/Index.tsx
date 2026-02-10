@@ -186,6 +186,8 @@ const Index = () => {
         setServer={setServer}
         viewingOffset={viewingOffset}
         setViewingOffset={setViewingOffset}
+        viewingMode={viewingMode}
+        setViewingMode={setViewingMode}
       />
       <main className="container py-6 space-y-6">
         <ScheduleTable items={grouped.ongoing} label="Ongoing Now" status="ongoing" />

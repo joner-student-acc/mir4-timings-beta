@@ -19,6 +19,16 @@ export interface TimezoneOption {
   utcOffset: number;
 }
 
+/**
+ * Detect the user's local UTC offset in hours (supports fractional like 5.5 for UTC+5:30)
+ */
+export function detectLocalUtcOffset(): number {
+  const offsetMin = -(new Date().getTimezoneOffset());
+  return offsetMin / 60;
+}
+
+export const AUTO_DETECT_VALUE = "AUTO";
+
 export const viewingTimezones: TimezoneOption[] = [
   { label: "UTC-12 (Baker Island)", utcOffset: -12 },
   { label: "UTC-11 (Pago Pago)", utcOffset: -11 },

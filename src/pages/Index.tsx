@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { worldBosses, specialAreas, events, EventEntry } from "@/data/scheduleData";
+import { worldBosses, events, EventEntry } from "@/data/scheduleData";
 import { ScheduleHeader } from "@/components/ScheduleHeader";
 import { ScheduleTable } from "@/components/ScheduleTable";
 import {
@@ -12,7 +12,7 @@ import {
 const DATA_OFFSET = 8;
 
 export type UnifiedRow = {
-  type: "boss" | "special" | "event";
+  type: "boss" | "event";
   name: string;
   subName: string;
   world?: string;
@@ -131,23 +131,6 @@ const Index = () => {
     });
 
     if (worldFilter === "ALL") {
-      specialAreas.forEach((a) => {
-        if (searchLower && !a.name.toLowerCase().includes(searchLower)) return;
-        const convertedView = a.times.map((t) => convertTime(t, DATA_OFFSET, viewingOffset));
-        const convertedServer = a.times.map((t) => convertTime(t, DATA_OFFSET, serverOffset));
-        const statuses = getTimesStatuses(convertedView, currentMin);
-        result.push({
-          type: "special",
-          name: a.name,
-          subName: "Special Area",
-          timesDisplay: convertedView.map((t, i) => ({
-            label: formatTime(t),
-            serverLabel: formatTime(convertedServer[i]),
-            status: statuses[i],
-          })),
-          rowStatus: getRowStatus(statuses),
-        });
-      });
 
       events.forEach((e) => {
         if (searchLower && !e.name.toLowerCase().includes(searchLower)) return;

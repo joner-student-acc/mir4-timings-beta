@@ -29,8 +29,8 @@ export function ScheduleTable({ items, label, status }: Props) {
           <thead>
             <tr className="border-b border-border text-muted-foreground font-display text-xs uppercase tracking-wider">
               <th className="text-left px-4 py-2">Name</th>
-              <th className="text-left px-4 py-2 hidden sm:table-cell">Location / Info</th>
-              <th className="text-left px-4 py-2 hidden md:table-cell w-16">World</th>
+              <th className="text-left px-4 py-2 hidden sm:table-cell">Location</th>
+              <th className="text-left px-4 py-2 hidden md:table-cell whitespace-nowrap">Map</th>
               <th className="text-left px-4 py-2">Your Time</th>
               <th className="text-left px-4 py-2 hidden lg:table-cell">Server Time</th>
             </tr>
@@ -46,8 +46,10 @@ export function ScheduleTable({ items, label, status }: Props) {
                   <span className="block sm:hidden text-xs text-muted-foreground font-normal">{row.subName}</span>
                   {row.world && <span className="block sm:hidden text-xs text-muted-foreground font-normal">{row.world}</span>}
                 </td>
-                <td className="px-4 py-2.5 text-muted-foreground hidden sm:table-cell">{row.subName}</td>
-                <td className="px-4 py-2.5 text-muted-foreground hidden md:table-cell">
+                <td className="px-4 py-2.5 text-muted-foreground hidden sm:table-cell">
+                  {row.subName}
+                </td>
+                <td className="px-4 py-2.5 text-muted-foreground hidden md:table-cell whitespace-nowrap">
                   {row.world ? (
                     <span className="font-display text-xs font-semibold text-gold-dark">{row.world}</span>
                   ) : "—"}
@@ -57,9 +59,9 @@ export function ScheduleTable({ items, label, status }: Props) {
                     {row.timesDisplay.map((t, j) => (
                       <span key={j} className={cn(
                         "inline-block px-1.5 py-0.5 rounded text-xs",
-                        t.status === "ongoing" && "bg-ongoing/20 text-ongoing-foreground font-bold",
+                        t.status === "ongoing" && "bg-ongoing/20 text-ongoing-foreground font-bold underline",
                         t.status === "upcoming" && "bg-upcoming/15 text-upcoming-foreground font-semibold",
-                        t.status === "finished" && "text-finished-foreground opacity-60",
+                        t.status === "finished" && "text-finished-foreground opacity-30",
                       )}>
                         {t.label}
                       </span>
@@ -69,7 +71,12 @@ export function ScheduleTable({ items, label, status }: Props) {
                 <td className="px-4 py-2.5 hidden lg:table-cell">
                   <div className="flex flex-wrap gap-1">
                     {row.timesDisplay.map((t, j) => (
-                      <span key={j} className="inline-block px-1.5 py-0.5 rounded text-xs text-muted-foreground opacity-70">
+                      <span key={j} className={cn(
+                        "inline-block px-1.5 py-0.5 rounded text-xs",
+                        t.status === "ongoing" && "text-ongoing-foreground font-bold opacity-30 underline",
+                        t.status === "upcoming" && "text-upcoming-foreground font-semibold opacity-30",
+                        t.status === "finished" && "text-finished-foreground opacity-30",
+                      )}>
                         {t.serverLabel}
                       </span>
                     ))}

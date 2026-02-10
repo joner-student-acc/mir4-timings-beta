@@ -79,8 +79,12 @@ const Index = () => {
   const [worldFilter, setWorldFilter] = useState("ALL");
   const [search, setSearch] = useState("");
   const [server, setServer] = useState<ServerRegion>(() => loadFromStorage("mir4-server", "ASIA"));
-  const [viewingOffset, setViewingOffset] = useState<number>(() => loadFromStorage("mir4-viewing-offset", 8));
-  const [, setTick] = useState(0);
+  const [viewingMode, setViewingMode] = useState<string>(() => loadFromStorage("mir4-viewing-mode", AUTO_DETECT_VALUE));
+  const [viewingOffset, setViewingOffset] = useState<number>(() => {
+    const mode = loadFromStorage("mir4-viewing-mode", AUTO_DETECT_VALUE);
+    if (mode === AUTO_DETECT_VALUE) return detectLocalUtcOffset();
+    return loadFromStorage("mir4-viewing-offset", 8);
+  });
 
   useEffect(() => {
     localStorage.setItem("mir4-server", JSON.stringify(server));

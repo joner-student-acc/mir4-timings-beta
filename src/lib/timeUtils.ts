@@ -1,17 +1,64 @@
-export type ServerRegion = "ASIA" | "INMENA" | "EU" | "SA" | "NA";
+export type ServerRegion = "ASIA" | "INMENA" | "MENA" | "EU" | "SA" | "NA";
 
 export interface ServerInfo {
   label: string;
-  utcOffset: number; // hours from UTC
+  utcOffset: number;
 }
 
 export const servers: Record<ServerRegion, ServerInfo> = {
-  ASIA: { label: "[ASIA] UTC+8", utcOffset: 8 },
-  INMENA: { label: "[INMENA] UTC+6", utcOffset: 6 },
-  EU: { label: "[EU] UTC+2", utcOffset: 2 },
-  SA: { label: "[SA] UTC-3", utcOffset: -3 },
-  NA: { label: "[NA] UTC-4", utcOffset: -4 },
+  ASIA: { label: "ASIA (UTC+8)", utcOffset: 8 },
+  INMENA: { label: "INDIA / INMENA (UTC+6)", utcOffset: 6 },
+  MENA: { label: "MENA (UTC+3)", utcOffset: 3 },
+  EU: { label: "EU / Europe (UTC+2)", utcOffset: 2 },
+  SA: { label: "SA / South America (UTC-3)", utcOffset: -3 },
+  NA: { label: "NA / North America (UTC-4)", utcOffset: -4 },
 };
+
+export interface TimezoneOption {
+  label: string;
+  utcOffset: number;
+}
+
+export const viewingTimezones: TimezoneOption[] = [
+  { label: "UTC-12 (Baker Island)", utcOffset: -12 },
+  { label: "UTC-11 (Pago Pago)", utcOffset: -11 },
+  { label: "UTC-10 (Honolulu)", utcOffset: -10 },
+  { label: "UTC-9:30 (Marquesas)", utcOffset: -9.5 },
+  { label: "UTC-9 (Anchorage)", utcOffset: -9 },
+  { label: "UTC-8 (Los Angeles)", utcOffset: -8 },
+  { label: "UTC-7 (Denver)", utcOffset: -7 },
+  { label: "UTC-6 (Chicago)", utcOffset: -6 },
+  { label: "UTC-5 (New York)", utcOffset: -5 },
+  { label: "UTC-4 (Santiago)", utcOffset: -4 },
+  { label: "UTC-3:30 (St. John's)", utcOffset: -3.5 },
+  { label: "UTC-3 (São Paulo)", utcOffset: -3 },
+  { label: "UTC-2 (South Georgia)", utcOffset: -2 },
+  { label: "UTC-1 (Azores)", utcOffset: -1 },
+  { label: "UTC+0 (London / GMT)", utcOffset: 0 },
+  { label: "UTC+1 (Paris / Berlin)", utcOffset: 1 },
+  { label: "UTC+2 (Cairo / Athens)", utcOffset: 2 },
+  { label: "UTC+3 (Moscow / Riyadh)", utcOffset: 3 },
+  { label: "UTC+3:30 (Tehran)", utcOffset: 3.5 },
+  { label: "UTC+4 (Dubai)", utcOffset: 4 },
+  { label: "UTC+4:30 (Kabul)", utcOffset: 4.5 },
+  { label: "UTC+5 (Karachi)", utcOffset: 5 },
+  { label: "UTC+5:30 (Mumbai / Delhi)", utcOffset: 5.5 },
+  { label: "UTC+5:45 (Kathmandu)", utcOffset: 5.75 },
+  { label: "UTC+6 (Dhaka)", utcOffset: 6 },
+  { label: "UTC+6:30 (Yangon)", utcOffset: 6.5 },
+  { label: "UTC+7 (Bangkok / Jakarta)", utcOffset: 7 },
+  { label: "UTC+8 (Singapore / Manila)", utcOffset: 8 },
+  { label: "UTC+8:45 (Eucla)", utcOffset: 8.75 },
+  { label: "UTC+9 (Tokyo / Seoul)", utcOffset: 9 },
+  { label: "UTC+9:30 (Adelaide)", utcOffset: 9.5 },
+  { label: "UTC+10 (Sydney / Melbourne)", utcOffset: 10 },
+  { label: "UTC+10:30 (Lord Howe)", utcOffset: 10.5 },
+  { label: "UTC+11 (Solomon Islands)", utcOffset: 11 },
+  { label: "UTC+12 (Auckland)", utcOffset: 12 },
+  { label: "UTC+12:45 (Chatham Islands)", utcOffset: 12.75 },
+  { label: "UTC+13 (Tonga)", utcOffset: 13 },
+  { label: "UTC+14 (Line Islands)", utcOffset: 14 },
+];
 
 /**
  * Get current time in a given UTC offset as hours & minutes
@@ -39,13 +86,15 @@ export function toMinutes(time: string): number {
 
 /**
  * Convert a time "HH:MM" from one UTC offset to another, returning new "HH:MM"
+ * Supports fractional offsets (e.g. UTC+5:30 = 5.5)
  */
 export function convertTime(time: string, fromOffset: number, toOffset: number): string {
   const [h, m] = time.split(":").map(Number);
-  let newH = h + (toOffset - fromOffset);
-  // Wrap around 24h
-  newH = ((newH % 24) + 24) % 24;
-  return `${String(newH).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+  const totalMinutes = h * 60 + m + (toOffset - fromOffset) * 60;
+  const wrapped = ((totalMinutes % 1440) + 1440) % 1440;
+  const newH = Math.floor(wrapped / 60);
+  const newM = Math.round(wrapped % 60);
+  return `${String(newH).padStart(2, "0")}:${String(newM).padStart(2, "0")}`;
 }
 
 /**
@@ -97,4 +146,16 @@ export function getRowStatus(statuses: ScheduleStatus[]): ScheduleStatus {
   if (statuses.includes("ongoing")) return "ongoing";
   if (statuses.includes("upcoming")) return "upcoming";
   return "finished";
+}
+
+/**
+ * Format a UTC offset number to a display string like "UTC+5:30"
+ */
+export function formatUtcOffset(offset: number): string {
+  const sign = offset >= 0 ? "+" : "-";
+  const abs = Math.abs(offset);
+  const h = Math.floor(abs);
+  const m = Math.round((abs - h) * 60);
+  if (m === 0) return `UTC${sign}${h}`;
+  return `UTC${sign}${h}:${String(m).padStart(2, "0")}`;
 }

@@ -5,6 +5,7 @@ import { ScheduleTable } from "@/components/ScheduleTable";
 import {
   convertTime, formatTime, getTimesStatuses, getRowStatus,
   getServerTime, ScheduleStatus, ServerRegion, servers, formatUtcOffset,
+  AUTO_DETECT_VALUE, detectLocalUtcOffset,
 } from "@/lib/timeUtils";
 
 /** Schedule data is stored in ASIA (UTC+8) times. */
@@ -78,16 +79,20 @@ const Index = () => {
   const [worldFilter, setWorldFilter] = useState("ALL");
   const [search, setSearch] = useState("");
   const [server, setServer] = useState<ServerRegion>(() => loadFromStorage("mir4-server", "ASIA"));
-  const [viewingOffset, setViewingOffset] = useState<number>(() => loadFromStorage("mir4-viewing-offset", 8));
+  const [viewingMode, setViewingMode] = useState<string>(() => loadFromStorage("mir4-viewing-mode", AUTO_DETECT_VALUE));
+  const [viewingOffset, setViewingOffset] = useState<number>(() => {
+    const mode = loadFromStorage("mir4-viewing-mode", AUTO_DETECT_VALUE);
+    if (mode === AUTO_DETECT_VALUE) return detectLocalUtcOffset();
+    return loadFromStorage("mir4-viewing-offset", 8);
+  });
   const [, setTick] = useState(0);
-
   useEffect(() => {
     localStorage.setItem("mir4-server", JSON.stringify(server));
   }, [server]);
 
   useEffect(() => {
     localStorage.setItem("mir4-viewing-offset", JSON.stringify(viewingOffset));
-  }, [viewingOffset]);
+  }, [viewingOffset, viewingMode]);
 
   useEffect(() => {
     const interval = setInterval(() => setTick((t) => t + 1), 30000);
@@ -179,6 +184,8 @@ const Index = () => {
         setServer={setServer}
         viewingOffset={viewingOffset}
         setViewingOffset={setViewingOffset}
+        viewingMode={viewingMode}
+        setViewingMode={setViewingMode}
       />
       <main className="container py-6 space-y-6">
         <ScheduleTable items={grouped.ongoing} label="Ongoing Now" status="ongoing" />

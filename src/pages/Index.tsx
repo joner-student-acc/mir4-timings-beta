@@ -5,6 +5,7 @@ import { ScheduleTable } from "@/components/ScheduleTable";
 import {
   convertTime, formatTime, getTimesStatuses, getRowStatus,
   getServerTime, ScheduleStatus, ServerRegion, servers, formatUtcOffset,
+  AUTO_DETECT_VALUE, detectLocalUtcOffset,
 } from "@/lib/timeUtils";
 
 /** Schedule data is stored in ASIA (UTC+8) times. */

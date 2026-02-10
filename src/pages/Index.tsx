@@ -85,7 +85,7 @@ const Index = () => {
     if (mode === AUTO_DETECT_VALUE) return detectLocalUtcOffset();
     return loadFromStorage("mir4-viewing-offset", 8);
   });
-
+  const [, setTick] = useState(0);
   useEffect(() => {
     localStorage.setItem("mir4-server", JSON.stringify(server));
   }, [server]);

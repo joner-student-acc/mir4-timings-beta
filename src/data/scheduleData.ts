@@ -24,6 +24,21 @@ function p(t: string): string {
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
 
+// Rotate a sorted array of "HH:MM" strings so it starts at or after 06:00
+function rotateTimes(times24: string[]): string[] {
+  const s = [...times24].sort();
+  const idx = s.findIndex(t => t >= "06:00");
+  if (idx === -1) return s;
+  return s.slice(idx).concat(s.slice(0, idx));
+}
+
+// Ensure every boss times array starts from 06:00 (or next available after 06:00)
+function applyRotationToAll(bosses: BossEntry[]) {
+  bosses.forEach(b => {
+    b.times = rotateTimes(b.times);
+  });
+}
+
 export const worldBosses: BossEntry[] = [
   // W1
   { world: "L3-W1", map: "Demon Bull Temple 1F", boss: "Boltox", times: ["7:00 AM","9:00 AM","11:00 AM","1:00 PM","3:00 PM","5:00 PM", "7:00 PM", "9:00 PM", "11:00 PM", "1:00 AM", "3:00 AM", "5:00 AM"].map(p) },
@@ -61,6 +76,9 @@ export const worldBosses: BossEntry[] = [
   { world: "SP", map: "South", boss: "SP Red Boss", times: ["6:00 AM", "12:00 PM", "6:00 PM", "12:00 AM"].map(p) },
   { world: "SP", map: "North", boss: "SP Red Boss", times: ["9:00 AM", "3:00 PM", "9:00 PM", "3:00 AM"].map(p) },
 ];
+
+// Apply rotation after worldBosses is defined
+applyRotationToAll(worldBosses);
 
 export const events: EventEntry[] = [
   { name: "Domination", period: "1st Period", times: "3 PM – 7 PM", startHour: 15, startMin: 0, endHour: 19, endMin: 0 },

@@ -31,8 +31,8 @@ export function ScheduleTable({ items, label, status }: Props) {
               <th className="text-left px-4 py-2">Name</th>
               <th className="text-left px-4 py-2 hidden sm:table-cell">Location</th>
               <th className="text-left px-4 py-2 hidden md:table-cell whitespace-nowrap">Map</th>
-              <th className="text-left px-4 py-2">Your Time</th>
-              <th className="text-left px-4 py-2 hidden lg:table-cell">Server Time</th>
+              <th className="text-left px-4 py-2 w-[40%]">Your Time</th>
+              <th className="text-left px-4 py-2 hidden lg:table-cell lg:w-[30%]">Server Time</th>
             </tr>
           </thead>
           <tbody>
@@ -54,28 +54,28 @@ export function ScheduleTable({ items, label, status }: Props) {
                     <span className="font-display text-xs font-semibold text-gold-dark">{row.world}</span>
                   ) : "—"}
                 </td>
-                <td className="px-4 py-2.5">
+                <td className="px-4 py-2.5 w-[40%]">
                   <div className="flex flex-wrap gap-1">
                     {row.timesDisplay.map((t, j) => (
                       <span key={j} className={cn(
                         "inline-block px-1.5 py-0.5 rounded text-xs",
-                        t.status === "ongoing" && "bg-ongoing/20 text-ongoing-foreground font-bold underline",
+                        t.status === "ongoing" && "bg-ongoing/20 text-ongoing-foreground font-bold",
                         t.status === "upcoming" && "bg-upcoming/15 text-upcoming-foreground font-semibold",
-                        t.status === "finished" && "text-finished-foreground opacity-30",
+                        t.status === "finished" && "bg-upcoming/15 font-semibold",
                       )}>
                         {t.label}
                       </span>
                     ))}
                   </div>
                 </td>
-                <td className="px-4 py-2.5 hidden lg:table-cell">
+                <td className="px-4 py-2.5 hidden lg:table-cell lg:w-[30%]">
                   <div className="flex flex-wrap gap-1">
                     {row.timesDisplay.map((t, j) => (
                       <span key={j} className={cn(
                         "inline-block px-1.5 py-0.5 rounded text-xs",
-                        t.status === "ongoing" && "text-ongoing-foreground font-bold opacity-30 underline",
+                        t.status === "ongoing" && "bg-ongoing/20 text-ongoing-foreground font-bold",
                         t.status === "upcoming" && "text-upcoming-foreground font-semibold opacity-30",
-                        t.status === "finished" && "text-finished-foreground opacity-30",
+                        t.status === "finished" && "text-upcoming-foreground opacity-30 font-semibold",
                       )}>
                         {t.serverLabel}
                       </span>

@@ -12,6 +12,34 @@ interface Props {
 export function ScheduleTable({ items, label, status }: Props) {
   if (items.length === 0) return null;
 
+  // For upcoming table, find the single globally-next time across all rows
+  let nextRowIdx = -1;
+  let nextTimeIdx = -1;
+  let earliestMin = Infinity;
+  if (status === "upcoming") {
+    items.forEach((row, ri) => {
+      row.timesDisplay.forEach((t, ti) => {
+        if (t.status === "upcoming") {
+          // Parse the label to get approximate minutes for comparison
+          const match = t.label.match(/(\d+):(\d+)\s*(AM|PM)/i);
+          if (match) {
+            let h = parseInt(match[1]);
+            const m = parseInt(match[2]);
+            const ampm = match[3].toUpperCase();
+            if (ampm === "PM" && h !== 12) h += 12;
+            if (ampm === "AM" && h === 12) h = 0;
+            const mins = h * 60 + m;
+            if (mins < earliestMin) {
+              earliestMin = mins;
+              nextRowIdx = ri;
+              nextTimeIdx = ti;
+            }
+          }
+        }
+      });
+    });
+  }
+
   return (
     <div className="card-border rounded-lg overflow-hidden bg-card">
       <div className={cn(
@@ -60,11 +88,11 @@ export function ScheduleTable({ items, label, status }: Props) {
                       <span key={j} className={cn(
                         "inline-block px-1.5 py-0.5 rounded text-xs",
                         t.status === "ongoing" && "bg-ongoing/20 text-ongoing-foreground font-bold",
-                        t.status === "upcoming" && !t.isNext && "bg-upcoming/15 text-upcoming-foreground font-semibold",
-                        t.status === "upcoming" && t.isNext && "bg-upcoming/30 text-upcoming-foreground font-bold ring-1 ring-upcoming/50",
+                        t.status === "upcoming" && !(i === nextRowIdx && j === nextTimeIdx) && "bg-upcoming/15 text-upcoming-foreground font-semibold",
+                        t.status === "upcoming" && (i === nextRowIdx && j === nextTimeIdx) && "bg-upcoming/30 text-upcoming-foreground font-bold ring-1 ring-upcoming/50",
                         t.status === "finished" && "bg-upcoming/15 font-semibold",
                       )}>
-                        {t.isNext && <span className="mr-0.5">▶</span>}
+                        {(i === nextRowIdx && j === nextTimeIdx) && <span className="mr-0.5">▶</span>}
                         {t.label}
                       </span>
                     ))}

@@ -118,7 +118,7 @@ const Index = () => {
       const convertedView = b.times.map((t) => convertTime(t, serverOffset, viewingOffset));
       const convertedServer = b.times.map((t) => t); // already in server time
       const statuses = getTimesStatuses(convertedView, currentMin);
-      const nextIdx = statuses.indexOf("upcoming");
+      
 
       result.push({
         type: "boss",
@@ -129,7 +129,6 @@ const Index = () => {
           label: formatTime(t),
           serverLabel: formatTime(convertedServer[i]),
           status: statuses[i],
-          isNext: i === nextIdx,
         })),
         rowStatus: getRowStatus(statuses),
       });

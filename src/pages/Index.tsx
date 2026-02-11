@@ -8,20 +8,23 @@ import {
   AUTO_DETECT_VALUE, detectLocalUtcOffset,
 } from "@/lib/timeUtils";
 
-/** Schedule data is stored in ASIA (UTC+8) times. */
-const DATA_OFFSET = 8;
+/**
+ * Schedule data represents "server local time" — the same wall-clock
+ * schedule applies to every MIR4 server in its own timezone.
+ * We convert from the *selected* server offset to the viewing offset.
+ */
 
 export type UnifiedRow = {
   type: "boss" | "event";
   name: string;
   subName: string;
   world?: string;
-  timesDisplay: { label: string; serverLabel?: string; status: ScheduleStatus }[];
+  timesDisplay: { label: string; serverLabel?: string; status: ScheduleStatus; isNext?: boolean }[];
   rowStatus: ScheduleStatus;
 };
 
-function getEventStatus(event: EventEntry, currentMin: number, viewOffset: number): ScheduleStatus {
-  const diff = viewOffset - DATA_OFFSET;
+function getEventStatus(event: EventEntry, currentMin: number, viewOffset: number, srvOffset: number): ScheduleStatus {
+  const diff = viewOffset - srvOffset;
   const startH = ((event.startHour + diff) * 60 + event.startMin);
   const endH = ((event.endHour + diff) * 60 + event.endMin);
   const start = ((startH % 1440) + 1440) % 1440;
@@ -37,7 +40,7 @@ function getEventStatus(event: EventEntry, currentMin: number, viewOffset: numbe
   return "finished";
 }
 
-function formatEventTimes(event: EventEntry, viewOffset: number, serverOffset: number): { label: string; serverLabel: string } {
+function formatEventTimes(event: EventEntry, viewOffset: number, srvOffset: number): { label: string; serverLabel: string } {
   const fmt = (h: number, m: number) => {
     const hh = ((h % 24) + 24) % 24;
     const ampm = hh >= 12 ? "PM" : "AM";
@@ -45,8 +48,8 @@ function formatEventTimes(event: EventEntry, viewOffset: number, serverOffset: n
     return `${h12}:${String(m).padStart(2, "0")} ${ampm}`;
   };
 
-  const viewDiff = viewOffset - DATA_OFFSET;
-  const serverDiff = serverOffset - DATA_OFFSET;
+  const viewDiff = viewOffset - srvOffset;
+  const serverDiff = 0;
 
   const vStartH = event.startHour + viewDiff;
   const vEndH = event.endHour + viewDiff;
@@ -111,10 +114,11 @@ const Index = () => {
       if (worldFilter !== "ALL" && b.world !== worldFilter) return;
       if (searchLower && !b.boss.toLowerCase().includes(searchLower) && !b.map.toLowerCase().includes(searchLower)) return;
 
-      // Convert from DATA_OFFSET to viewing offset for display & status
-      const convertedView = b.times.map((t) => convertTime(t, DATA_OFFSET, viewingOffset));
-      const convertedServer = b.times.map((t) => convertTime(t, DATA_OFFSET, serverOffset));
+      // Convert from server offset to viewing offset for display & status
+      const convertedView = b.times.map((t) => convertTime(t, serverOffset, viewingOffset));
+      const convertedServer = b.times.map((t) => t); // already in server time
       const statuses = getTimesStatuses(convertedView, currentMin);
+      const nextIdx = statuses.indexOf("upcoming");
 
       result.push({
         type: "boss",
@@ -125,6 +129,7 @@ const Index = () => {
           label: formatTime(t),
           serverLabel: formatTime(convertedServer[i]),
           status: statuses[i],
+          isNext: i === nextIdx,
         })),
         rowStatus: getRowStatus(statuses),
       });
@@ -134,7 +139,7 @@ const Index = () => {
 
       events.forEach((e) => {
         if (searchLower && !e.name.toLowerCase().includes(searchLower)) return;
-        const status = getEventStatus(e, currentMin, viewingOffset);
+        const status = getEventStatus(e, currentMin, viewingOffset, serverOffset);
         const { label, serverLabel } = formatEventTimes(e, viewingOffset, serverOffset);
         result.push({
           type: "event",

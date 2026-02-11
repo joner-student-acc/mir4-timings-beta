@@ -88,11 +88,10 @@ export function ScheduleTable({ items, label, status }: Props) {
                       <span key={j} className={cn(
                         "inline-block px-1.5 py-0.5 rounded text-xs",
                         t.status === "ongoing" && "bg-ongoing/20 text-ongoing-foreground font-bold",
-                        t.status === "upcoming" && "bg-upcoming/15 text-upcoming-foreground font-semibold",
-                        t.status === "upcoming" && i === nextRowIdx && j === nextTimeIdx && "bg-upcoming/30 font-bold ring-1 ring-upcoming/50",
+                        t.status === "upcoming" && "bg-upcoming/30 text-upcoming-foreground font-bold ring-1 ring-upcoming/50",
                         t.status === "finished" && "bg-upcoming/15 font-semibold",
                       )}>
-                        {(i === nextRowIdx && j === nextTimeIdx) && <span className="mr-0.5">▶</span>}
+                        {t.status === "upcoming" && <span className="mr-0.5">▶</span>}
                         {t.label}
                       </span>
                     ))}

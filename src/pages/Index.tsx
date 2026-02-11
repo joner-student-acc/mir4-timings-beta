@@ -154,11 +154,34 @@ const Index = () => {
     return result;
   }, [worldFilter, searchLower, currentMin, viewingOffset, serverOffset]);
 
-  const grouped = useMemo(() => ({
-    ongoing: rows.filter((r) => r.rowStatus === "ongoing"),
-    upcoming: rows.filter((r) => r.rowStatus === "upcoming"),
-    finished: rows.filter((r) => r.rowStatus === "finished"),
-  }), [rows]);
+  const grouped = useMemo(() => {
+    const ongoing = rows.filter((r) => r.rowStatus === "ongoing");
+    const upcoming = rows.filter((r) => r.rowStatus === "upcoming");
+    const finished = rows.filter((r) => r.rowStatus === "finished");
+
+    // Sort upcoming by their earliest upcoming time
+    upcoming.sort((a, b) => {
+      const getEarliest = (row: UnifiedRow) => {
+        let min = Infinity;
+        for (const t of row.timesDisplay) {
+          if (t.status === "upcoming") {
+            const match = t.label.match(/(\d+):(\d+)\s*(AM|PM)/i);
+            if (match) {
+              let h = parseInt(match[1]);
+              const m = parseInt(match[2]);
+              if (match[3].toUpperCase() === "PM" && h !== 12) h += 12;
+              if (match[3].toUpperCase() === "AM" && h === 12) h = 0;
+              min = Math.min(min, h * 60 + m);
+            }
+          }
+        }
+        return min;
+      };
+      return getEarliest(a) - getEarliest(b);
+    });
+
+    return { ongoing, upcoming, finished };
+  }, [rows]);
 
   return (
     <div className="min-h-screen bg-background">

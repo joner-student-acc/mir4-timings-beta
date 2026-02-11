@@ -28,7 +28,22 @@ export function ScheduleHeader({
     return () => clearInterval(interval);
   }, [viewingTzOffset]);
 
+  // track the selected server's current time
+  const [serverClock, setServerClock] = useState(getServerDate(servers[server].utcOffset));
+
+  useEffect(() => {
+    const interval = setInterval(() => setServerClock(getServerDate(servers[server].utcOffset)), 1000);
+    return () => clearInterval(interval);
+  }, [server]);
+
   const timeStr = clock.toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+  });
+
+  const serverTimeStr = serverClock.toLocaleTimeString("en-US", {
     hour: "2-digit",
     minute: "2-digit",
     second: "2-digit",
@@ -38,6 +53,9 @@ export function ScheduleHeader({
   const viewingLabel = viewingMode === AUTO_DETECT_VALUE
     ? `Auto (${formatUtcOffset(viewingOffset)})`
     : viewingTimezones.find(tz => tz.utcOffset === viewingOffset)?.label ?? formatUtcOffset(viewingOffset);
+
+  const detectedOffset = detectLocalUtcOffset();
+  const detectedLabel = viewingTimezones.find(tz => tz.utcOffset === detectedOffset)?.label ?? formatUtcOffset(detectedOffset);
 
   return (
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b border-border">
@@ -49,9 +67,10 @@ export function ScheduleHeader({
                 MIR4 Timing Guide
               </h1>
               <p className="text-sm text-muted-foreground font-body">
-                Server Time: <span className="text-gold-light font-semibold">{servers[server].label}</span>
+                Server Time: <span className="text-gold-light font-semibold">{servers[server].label} — {serverTimeStr}</span>
                 {" · "}
-                Your Time: <span className="text-gold-light font-semibold">{timeStr}</span>
+                Your Time:
+                <span className="text-gold-light font-semibold"> {detectedLabel} — {timeStr}</span>
               </p>
             </div>
           </div>
@@ -90,6 +109,7 @@ export function ScheduleHeader({
                   <option key={tz.utcOffset} value={tz.utcOffset}>{tz.label}</option>
                 ))}
               </select>
+
             </div>
 
             <div className="flex flex-col gap-0.5">

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { worldBosses, events, EventEntry } from "@/data/scheduleData";
+import { schedule, EventEntry } from "@/data/scheduleData";
 import { ScheduleHeader } from "@/components/ScheduleHeader";
 import { ScheduleTable } from "@/components/ScheduleTable";
 import {
@@ -7,28 +7,19 @@ import {
   getServerTime, ScheduleStatus, ServerRegion, servers, formatUtcOffset,
   AUTO_DETECT_VALUE, detectLocalUtcOffset,
 } from "@/lib/timeUtils";
-
-/**
- * Schedule data represents "server local time" — the same wall-clock
- * schedule applies to every MIR4 server in its own timezone.
- * We convert from the *selected* server offset to the viewing offset.
- */
-
-export type UnifiedRow = {
-  type: "boss" | "event";
-  name: string;
-  subName: string;
-  world?: string;
-  timesDisplay: { label: string; serverLabel?: string; status: ScheduleStatus; isNext?: boolean }[];
-  rowStatus: ScheduleStatus;
-};
+import type { UnifiedRow } from "@/types/schedule";
 
 function getEventStatus(event: EventEntry, currentMin: number, viewOffset: number, srvOffset: number): ScheduleStatus {
-  const diff = viewOffset - srvOffset;
-  const startH = ((event.startHour + diff) * 60 + event.startMin);
-  const endH = ((event.endHour + diff) * 60 + event.endMin);
-  const start = ((startH % 1440) + 1440) % 1440;
-  const end = ((endH % 1440) + 1440) % 1440;
+  // Event times are stored as server-local hours. Convert them to viewing
+  // timezone and then decide status based on viewing current minutes.
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const serverStart = `${pad(event.startHour)}:${pad(event.startMin)}`;
+  const serverEnd = `${pad(event.endHour)}:${pad(event.endMin)}`;
+
+  const viewStartStr = convertTime(serverStart, srvOffset, viewOffset);
+  const viewEndStr = convertTime(serverEnd, srvOffset, viewOffset);
+  const start = ((parseInt(viewStartStr.split(":")[0], 10) * 60) + parseInt(viewStartStr.split(":")[1], 10)) % 1440;
+  const end = ((parseInt(viewEndStr.split(":")[0], 10) * 60) + parseInt(viewEndStr.split(":")[1], 10)) % 1440;
 
   if (end <= start) {
     if (currentMin >= start || currentMin < end) return "ongoing";
@@ -41,30 +32,24 @@ function getEventStatus(event: EventEntry, currentMin: number, viewOffset: numbe
 }
 
 function formatEventTimes(event: EventEntry, viewOffset: number, srvOffset: number): { label: string; serverLabel: string } {
-  const fmt = (h: number, m: number) => {
-    const hh = ((h % 24) + 24) % 24;
-    const ampm = hh >= 12 ? "PM" : "AM";
-    const h12 = hh % 12 || 12;
+  const fmtFromHM = (hm: string) => {
+    const [h, m] = hm.split(":").map(Number);
+    const ampm = h >= 12 ? "PM" : "AM";
+    const h12 = h % 12 || 12;
     return `${h12}:${String(m).padStart(2, "0")} ${ampm}`;
   };
 
-  const viewDiff = viewOffset - srvOffset;
-  const serverDiff = 0;
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const serverStart = `${pad(event.startHour)}:${pad(event.startMin)}`;
+  const serverEnd = `${pad(event.endHour)}:${pad(event.endMin)}`;
 
-  const vStartH = event.startHour + viewDiff;
-  const vEndH = event.endHour + viewDiff;
-  const sStartH = event.startHour + serverDiff;
-  const sEndH = event.endHour + serverDiff;
+  const viewStart = convertTime(serverStart, srvOffset, viewOffset);
+  const viewEnd = convertTime(serverEnd, srvOffset, viewOffset);
 
   const isPoint = event.startHour === event.endHour && event.startMin === event.endMin;
 
-  const label = isPoint
-    ? fmt(vStartH, event.startMin)
-    : `${fmt(vStartH, event.startMin)} – ${fmt(vEndH, event.endMin)}`;
-
-  const serverLabel = isPoint
-    ? fmt(sStartH, event.startMin)
-    : `${fmt(sStartH, event.startMin)} – ${fmt(sEndH, event.endMin)}`;
+  const label = isPoint ? fmtFromHM(viewStart) : `${fmtFromHM(viewStart)} – ${fmtFromHM(viewEnd)}`;
+  const serverLabel = isPoint ? fmtFromHM(serverStart) : `${fmtFromHM(serverStart)} – ${fmtFromHM(serverEnd)}`;
 
   return { label, serverLabel };
 }
@@ -110,18 +95,40 @@ const Index = () => {
   const rows = useMemo(() => {
     const result: UnifiedRow[] = [];
 
-    worldBosses.forEach((b) => {
+    // Iterate unified schedule entries; entries with `startHour` are events,
+    // others are boss spawn rows (with `times` array).
+    schedule.forEach((entry) => {
+      // EventEntry detection
+      if ((entry as EventEntry).startHour !== undefined) {
+        const e = entry as EventEntry;
+        if (worldFilter !== "ALL") return; // events only shown in the global list
+        if (searchLower && !e.name.toLowerCase().includes(searchLower)) return;
+
+        const status = getEventStatus(e, currentMin, viewingOffset, serverOffset);
+        const { label, serverLabel } = formatEventTimes(e, viewingOffset, serverOffset);
+        result.push({
+          type: "event",
+          name: e.name,
+          subName: e.period || "Event",
+          timesDisplay: [{ label, serverLabel, status, isNext: status === "upcoming" }],
+          rowStatus: status,
+        });
+        return;
+      }
+
+      // BossEntry handling
+      const b: any = entry;
       if (worldFilter !== "ALL" && b.world !== worldFilter) return;
       if (searchLower && !b.boss.toLowerCase().includes(searchLower) && !b.map.toLowerCase().includes(searchLower)) return;
 
-      // Convert from server offset to viewing offset for display & status
-      const convertedView = b.times.map((t) => convertTime(t, serverOffset, viewingOffset));
-      const convertedServer = b.times.map((t) => t); // already in server time
+      // Boss times are stored in PH time (UTC+8). Convert from PH -> viewing and PH -> selected server
+      const PH_OFFSET = 8;
+      const convertedView = b.times.map((t: string) => convertTime(t, PH_OFFSET, viewingOffset));
+      const convertedServer = b.times.map((t: string) => convertTime(t, PH_OFFSET, serverOffset));
       const statuses = getTimesStatuses(convertedView, currentMin);
-      
 
       // Build timesDisplay and mark the earliest upcoming time as `isNext`
-      const rawTimes = convertedView.map((t, i) => ({
+      const rawTimes = convertedView.map((t: string, i: number) => ({
         label: formatTime(t),
         serverLabel: formatTime(convertedServer[i]),
         status: statuses[i],
@@ -165,22 +172,6 @@ const Index = () => {
         rowStatus,
       });
     });
-
-    if (worldFilter === "ALL") {
-
-      events.forEach((e) => {
-        if (searchLower && !e.name.toLowerCase().includes(searchLower)) return;
-        const status = getEventStatus(e, currentMin, viewingOffset, serverOffset);
-        const { label, serverLabel } = formatEventTimes(e, viewingOffset, serverOffset);
-        result.push({
-          type: "event",
-          name: e.name,
-          subName: e.period || "Event",
-          timesDisplay: [{ label, serverLabel, status, isNext: status === "upcoming" }],
-          rowStatus: status,
-        });
-      });
-    }
 
     result.sort((a, b) => statusOrder[a.rowStatus] - statusOrder[b.rowStatus]);
     return result;

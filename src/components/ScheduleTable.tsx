@@ -1,7 +1,7 @@
 import { StatusBadge } from "@/components/StatusBadge";
 import { ScheduleStatus } from "@/lib/timeUtils";
 import { cn } from "@/lib/utils";
-import type { UnifiedRow } from "@/pages/Index";
+import type { UnifiedRow } from "@/types/schedule";
 
 interface Props {
   items: UnifiedRow[];
@@ -99,7 +99,7 @@ export function ScheduleTable({ items, label, status }: Props) {
                 </td>
                 <td className="px-4 py-2.5 text-muted-foreground hidden md:table-cell whitespace-nowrap">
                   {row.world ? (
-                    <span className="font-display text-xs font-semibold text-gold-dark">{row.world}</span>
+                    <span className="font-display text-s font-semibold text-gold-dark">{row.world}</span>
                   ) : "—"}
                 </td>
                 <td className="px-4 py-2.5 w-[40%]">

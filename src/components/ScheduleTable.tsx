@@ -64,11 +64,31 @@ export function ScheduleTable({ items, label, status }: Props) {
             </tr>
           </thead>
           <tbody>
-            {items.map((row, i) => (
-              <tr key={i} className={cn(
-                "border-b border-border/50 transition-colors",
-                row.rowStatus === "ongoing" && "bg-ongoing/5",
-              )}>
+            {items.map((row, i) => {
+              const parseLabelToMin = (label: string) => {
+                const m = label.match(/(\d+):(\d+)\s*(AM|PM)/i);
+                if (!m) return 0;
+                let hh = parseInt(m[1], 10);
+                const mm = parseInt(m[2], 10);
+                const ampm = m[3].toUpperCase();
+                if (ampm === "PM" && hh !== 12) hh += 12;
+                if (ampm === "AM" && hh === 12) hh = 0;
+                return hh * 60 + mm;
+              };
+
+              // sort Your Time starting from 6:00 AM (wraps around)
+              const startBase = 6 * 60;
+              const yourTimes = row.timesDisplay.slice().sort((a, b) => {
+                const aa = (parseLabelToMin(a.label) - startBase + 1440) % 1440;
+                const bb = (parseLabelToMin(b.label) - startBase + 1440) % 1440;
+                return aa - bb;
+              });
+
+              return (
+                <tr key={i} className={cn(
+                  "border-b border-border/50 transition-colors",
+                  row.rowStatus === "ongoing" && "bg-ongoing/5",
+                )}>
                 <td className="px-4 py-2.5 font-semibold text-foreground">
                   {row.name}
                   <span className="block sm:hidden text-xs text-muted-foreground font-normal">{row.subName}</span>
@@ -84,15 +104,16 @@ export function ScheduleTable({ items, label, status }: Props) {
                 </td>
                 <td className="px-4 py-2.5 w-[40%]">
                   <div className="flex flex-wrap gap-1">
-                    {row.timesDisplay.map((t, j) => (
+                    {yourTimes.map((t, j) => (
                       <span key={j} className={cn(
                         "inline-block px-1.5 py-0.5 rounded text-xs",
                         t.status === "ongoing" && "bg-ongoing/20 text-ongoing-foreground font-bold",
-                        t.status === "upcoming" && "bg-upcoming/15 text-upcoming-foreground font-semibold",
-                        t.status === "upcoming" && i === nextRowIdx && j === nextTimeIdx && "bg-upcoming/30 font-bold ring-1 ring-upcoming/50",
+                        // for the upcoming table, highlight the per-row next upcoming time
+                        status === "upcoming" && t.status === "upcoming" && t.isNext && "bg-upcoming/30 font-bold ring-1 ring-upcoming/50",
+                        !t.isNext && t.status === "upcoming" && "bg-upcoming/15 text-upcoming-foreground font-semibold",
                         t.status === "finished" && "bg-upcoming/15 font-semibold",
                       )}>
-                        {(i === nextRowIdx && j === nextTimeIdx) && <span className="mr-0.5">▶</span>}
+                        {(status === "upcoming" && t.status === "upcoming" && t.isNext) && <span className="mr-0.5">▶</span>}
                         {t.label}
                       </span>
                     ))}
@@ -104,7 +125,8 @@ export function ScheduleTable({ items, label, status }: Props) {
                       <span key={j} className={cn(
                         "inline-block px-1.5 py-0.5 rounded text-xs",
                         t.status === "ongoing" && "bg-ongoing/20 text-ongoing-foreground font-bold",
-                        t.status === "upcoming" && "text-upcoming-foreground font-semibold opacity-30",
+                        status === "upcoming" && t.status === "upcoming" && t.isNext && "bg-upcoming/30 font-bold ring-1 ring-upcoming/50",
+                        !t.isNext && t.status === "upcoming" && "text-upcoming-foreground font-semibold opacity-30",
                         t.status === "finished" && "text-upcoming-foreground opacity-30 font-semibold",
                       )}>
                         {t.serverLabel}
@@ -113,7 +135,8 @@ export function ScheduleTable({ items, label, status }: Props) {
                   </div>
                 </td>
               </tr>
-            ))}
+            );
+            })}
           </tbody>
         </table>
       </div>

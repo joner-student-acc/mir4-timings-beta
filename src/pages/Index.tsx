@@ -120,17 +120,49 @@ const Index = () => {
       const statuses = getTimesStatuses(convertedView, currentMin);
       
 
+      // Build timesDisplay and mark the earliest upcoming time as `isNext`
+      const rawTimes = convertedView.map((t, i) => ({
+        label: formatTime(t),
+        serverLabel: formatTime(convertedServer[i]),
+        status: statuses[i],
+        isNext: false,
+      }));
+
+      const toMinutes = (label: string) => {
+        const match = label.match(/(\d+):(\d+)\s*(AM|PM)/i);
+        if (!match) return Infinity;
+        let h = parseInt(match[1], 10);
+        const m = parseInt(match[2], 10);
+        const ampm = match[3].toUpperCase();
+        if (ampm === "PM" && h !== 12) h += 12;
+        if (ampm === "AM" && h === 12) h = 0;
+        return h * 60 + m;
+      };
+
+      // find earliest upcoming time index
+      let bestIdx = -1;
+      let bestMin = Infinity;
+      rawTimes.forEach((rt, idx) => {
+        if (rt.status === "upcoming") {
+          const mins = toMinutes(rt.label);
+          if (mins < bestMin) {
+            bestMin = mins;
+            bestIdx = idx;
+          }
+        }
+      });
+
+      const rowStatus = getRowStatus(statuses);
+      // only mark `isNext` when the entire row is classified as upcoming
+      if (rowStatus === "upcoming" && bestIdx >= 0) rawTimes[bestIdx].isNext = true;
+
       result.push({
         type: "boss",
         name: b.boss,
         subName: b.map,
         world: b.world,
-        timesDisplay: convertedView.map((t, i) => ({
-          label: formatTime(t),
-          serverLabel: formatTime(convertedServer[i]),
-          status: statuses[i],
-        })),
-        rowStatus: getRowStatus(statuses),
+        timesDisplay: rawTimes,
+        rowStatus,
       });
     });
 
@@ -144,7 +176,7 @@ const Index = () => {
           type: "event",
           name: e.name,
           subName: e.period || "Event",
-          timesDisplay: [{ label, serverLabel, status }],
+          timesDisplay: [{ label, serverLabel, status, isNext: status === "upcoming" }],
           rowStatus: status,
         });
       });

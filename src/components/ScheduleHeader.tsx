@@ -49,9 +49,7 @@ export function ScheduleHeader({
                 MIR4 Timing Guide
               </h1>
               <p className="text-sm text-muted-foreground font-body">
-                Server: <span className="text-gold-light font-semibold">{servers[server].label}</span>
-                {" → "}
-                Viewing: <span className="text-gold-light font-semibold">{viewingLabel}</span>
+                Server Time: <span className="text-gold-light font-semibold">{servers[server].label}</span>
                 {" · "}
                 Your Time: <span className="text-gold-light font-semibold">{timeStr}</span>
               </p>

@@ -123,11 +123,19 @@ export type ScheduleStatus = "ongoing" | "upcoming" | "finished";
  * Find the next upcoming time index from a list of "HH:MM" times
  */
 export function getNextUpcomingIndex(times: string[], currentMinutes: number): number {
+  // Find the index with smallest forward delta from currentMinutes,
+  // treating times as repeating every 24h (wrap-around).
+  let bestIdx = -1;
+  let bestDelta = 1441;
   for (let i = 0; i < times.length; i++) {
     const spawn = toMinutes(times[i]);
-    if (spawn > currentMinutes) return i;
+    const delta = ((spawn - currentMinutes) % 1440 + 1440) % 1440; // 0..1439
+    if (delta > 0 && delta < bestDelta) {
+      bestDelta = delta;
+      bestIdx = i;
+    }
   }
-  return -1;
+  return bestIdx;
 }
 
 /**
@@ -137,14 +145,27 @@ export function getTimesStatuses(
   times: string[],
   currentMinutes: number
 ): ScheduleStatus[] {
-  const nextIdx = getNextUpcomingIndex(times, currentMinutes);
-
-  return times.map((t, i) => {
+  // Compute normalized deltas and determine the nearest upcoming spawn
+  const deltas = times.map((t) => {
     const spawn = toMinutes(t);
-    const diff = currentMinutes - spawn;
-    if (diff >= 0 && diff < 30) return "ongoing";
+    const forward = ((spawn - currentMinutes) % 1440 + 1440) % 1440; // minutes until spawn
+    const since = ((currentMinutes - spawn) % 1440 + 1440) % 1440; // minutes since spawn
+    return { spawn, forward, since };
+  });
+
+  // find smallest positive forward (next upcoming)
+  let minForward = 1441;
+  let nextIdx = -1;
+  deltas.forEach((d, i) => {
+    if (d.forward > 0 && d.forward < minForward) {
+      minForward = d.forward;
+      nextIdx = i;
+    }
+  });
+
+  return deltas.map((d, i) => {
+    if (d.since >= 0 && d.since < 30) return "ongoing";
     if (i === nextIdx) return "upcoming";
-    if (spawn > currentMinutes) return "upcoming";
     return "finished";
   });
 }

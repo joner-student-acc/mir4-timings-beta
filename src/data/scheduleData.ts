@@ -13,11 +13,16 @@ export interface EventEntry {
   startMin: number;
   endHour: number;
   endMin: number;
+  world?: string; // optional world/location for filtering
 }
 
 // Helper to parse "7:00 AM" -> "07:00"
 function p(t: string): string {
-  const [time, meridiem] = t.trim().split(" ");
+  // Accept variants like "12:00 MN" (midnight) and "12:00 NN" (noon)
+  const parts = t.trim().split(/\s+/);
+  const time = parts[0];
+  let meridiem = (parts[1] || "").toUpperCase().replace(/\./g, "");
+
   let [h, m] = time.split(":").map(Number);
   if (meridiem === "PM" && h !== 12) h += 12;
   if (meridiem === "AM" && h === 12) h = 0;
@@ -81,7 +86,7 @@ export const worldBosses: BossEntry[] = [
 applyRotationToAll(worldBosses);
 
 export const events: EventEntry[] = [
-  { name: "Domination", period: "1st Period", times: "9 AM – 1 PM", startHour: 9, startMin: 0, endHour: 13, endMin: 0 },
+  { name: "Domination", period: "1st Period", times: "9 AM – 1 PM", startHour: 9, startMin: 0, endHour: 13, endMin: 0, world: "Domi" },
   { name: "Domination", period: "2nd Period", times: "3 PM – 7 PM", startHour: 15, startMin: 0, endHour: 19, endMin: 0 },
   { name: "Domination", period: "3rd Period", times: "9 PM – 1 AM", startHour: 21, startMin: 0, endHour: 1, endMin: 0 },
   { name: "Server Expedition", times: "10:00 PM – 11:00 PM", startHour: 22, startMin: 0, endHour: 23, endMin: 0 },

@@ -88,18 +88,23 @@ export const worldBosses: BossEntry[] = [
 applyRotationToAll(worldBosses);
 
 export const events: EventEntry[] = [
-  { name: "Domination", period: "1st Period", times: "9 AM – 1 PM", startHour: 9, startMin: 0, endHour: 13, endMin: 0, world: "Domi" },
-  { name: "Domination", period: "LW", times: "10 AM – 10:30 AM", startHour: 10, startMin: 0, endHour: 10, endMin: 30, world: "TOWER" },
-  { name: "Domination", period: "LW", times: "12 PM – 12:30 PM", startHour: 12, startMin: 0, endHour: 12, endMin: 30, world: "TOWER" },
+  { name: "1st Domi", period: "DOMI-1", times: "9 AM – 1 PM", startHour: 9, startMin: 0, endHour: 13, endMin: 0, world: "Domi" },
+  { name: "1st Domi 1st LW", period: "LW1-1", times: "10 AM – 10:30 AM", startHour: 10, startMin: 0, endHour: 10, endMin: 30, world: "TOWER" },
+  { name: "1st Domi 2nd LW", period: "LW1-2", times: "12 PM – 12:30 PM", startHour: 12, startMin: 0, endHour: 12, endMin: 30, world: "TOWER" },
+  { name: "1st Domi Juja", period: "DOMI-1-JUJA", times: "11 AM – 11:30 AM", startHour: 11, startMin: 0, endHour: 11, endMin: 30, world: "TOWER" },
 
-  { name: "Domination", period: "2nd Period", times: "3 PM – 7 PM", startHour: 15, startMin: 0, endHour: 19, endMin: 0, world: "Domi" },
-  { name: "Domination", period: "LW", times: "4 PM – 4:30 PM", startHour: 16, startMin: 0, endHour: 16, endMin: 30, world: "TOWER" },
-  { name: "Domination", period: "LW", times: "6 PM – 6:30 PM", startHour: 18, startMin: 0, endHour: 18, endMin: 30, world: "TOWER" },
+  { name: "2nd Domi", period: "DOMI-2", times: "3 PM – 7 PM", startHour: 15, startMin: 0, endHour: 19, endMin: 0, world: "Domi" },
+  { name: "2nd Domi 1st LW", period: "LW2-1", times: "4 PM – 4:30 PM", startHour: 16, startMin: 0, endHour: 16, endMin: 30, world: "TOWER" },
+  { name: "2nd Domi 2nd LW", period: "LW2-2", times: "6 PM – 6:30 PM", startHour: 18, startMin: 0, endHour: 18, endMin: 30, world: "TOWER" },
+  { name: "2nd Domi Juja", period: "DOMI-2-JUJA", times: "5 PM – 5:30 PM", startHour: 17, startMin: 0, endHour: 17, endMin: 30, world: "TOWER" },
 
-  { name: "Domination", period: "3rd Period", times: "9 PM – 1 AM", startHour: 21, startMin: 0, endHour: 1, endMin: 0, world: "Domi" },
-  { name: "Domination", period: "LW", times: "10 PM – 10:30 PM", startHour: 22, startMin: 0, endHour: 22, endMin: 30, world: "TOWER" },
-  { name: "Domination", period: "LW", times: "12 AM – 12:30 PM", startHour: 0, startMin: 0, endHour: 0, endMin: 30, world: "TOWER" },
-  
+
+
+  { name: "3rd Domi", period: "DOMI-3", times: "9 PM – 1 AM", startHour: 21, startMin: 0, endHour: 1, endMin: 0, world: "Domi" },
+  { name: "3rd Domi 1st LW", period: "LW3-1", times: "10 PM – 10:30 PM", startHour: 22, startMin: 0, endHour: 22, endMin: 30, world: "TOWER" },
+  { name: "3rd Domi 2nd LW", period: "LW3-2", times: "12 AM – 12:30 PM", startHour: 0, startMin: 0, endHour: 0, endMin: 30, world: "TOWER" },
+  { name: "3rd Domi Juja", period: "DOMI-3-JUJA", times: "11 PM – 11:30 PM", startHour: 23, startMin: 0, endHour: 23, endMin: 30, world: "TOWER" },
+
   { name: "Server Expedition", times: "10:00 PM – 11:00 PM", startHour: 22, startMin: 0, endHour: 23, endMin: 0, world: "Server" },
   { name: "Valley War", times: "9:00 PM – 10:00 PM", startHour: 21, startMin: 0, endHour: 22, endMin: 0, world: "Valley", daysOfWeek: [3] },
   { name: "Mirage Living Wraith", times: "9:00 PM – 10:00 PM", startHour: 21, startMin: 0, endHour: 22, endMin: 0, world: "Mirage", daysOfWeek: [4] },

@@ -113,20 +113,6 @@ export function ScheduleHeader({
             </div>
 
             <div className="flex flex-col gap-0.5">
-              <label className="text-sm uppercase tracking-wider text-muted-foreground font-display">World</label>
-              <select
-                value={worldFilter}
-                onChange={(e) => setWorldFilter(e.target.value)}
-                className="bg-secondary text-secondary-foreground border border-border rounded px-3 py-1.5 text-sm font-display focus:outline-none focus:ring-1 focus:ring-ring"
-              >
-                <option value="ALL">All Worlds</option>
-                {allWorlds.map((w) => (
-                  <option key={w} value={w}>{w}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="flex flex-col gap-0.5">
               <label className="text-sm uppercase tracking-wider text-muted-foreground font-display">Search</label>
               <input
                 type="text"

@@ -4,7 +4,7 @@ import { ScheduleHeader } from "@/components/ScheduleHeader";
 import { ScheduleTable } from "@/components/ScheduleTable";
 import {
   convertTime, formatTime, getTimesStatuses, getRowStatus,
-  getServerTime, ScheduleStatus, ServerRegion, servers, formatUtcOffset,
+  getServerDate, getServerTime, ScheduleStatus, ServerRegion, servers, formatUtcOffset,
   AUTO_DETECT_VALUE, detectLocalUtcOffset,
 } from "@/lib/timeUtils";
 import type { UnifiedRow } from "@/types/schedule";
@@ -94,6 +94,7 @@ const Index = () => {
 
   const rows = useMemo(() => {
     const result: UnifiedRow[] = [];
+    const serverDay = getServerDate(serverOffset).getDay();
 
     // Iterate unified schedule entries; entries with `startHour` are events,
     // others are boss spawn rows (with `times` array).
@@ -103,6 +104,7 @@ const Index = () => {
         const e = entry as EventEntry;
         if (worldFilter !== "ALL") return; // events only shown in the global list
         if (searchLower && !e.name.toLowerCase().includes(searchLower)) return;
+        if (e.daysOfWeek && !e.daysOfWeek.includes(serverDay)) return;
 
         const status = getEventStatus(e, currentMin, viewingOffset, serverOffset);
         const { label, serverLabel } = formatEventTimes(e, viewingOffset, serverOffset);
@@ -110,6 +112,7 @@ const Index = () => {
           type: "event",
           name: e.name,
           subName: e.period || "Event",
+          world: e.world,
           timesDisplay: [{ label, serverLabel, status, isNext: status === "upcoming" }],
           rowStatus: status,
         });
@@ -184,23 +187,31 @@ const Index = () => {
 
     // Sort upcoming by their earliest upcoming time
     upcoming.sort((a, b) => {
-      const getEarliest = (row: UnifiedRow) => {
-        let min = Infinity;
+      const parseLabelToMin = (label: string) => {
+        const match = label.match(/(\d+):(\d+)\s*(AM|PM)/i);
+        if (!match) return Infinity;
+        let h = parseInt(match[1], 10);
+        const m = parseInt(match[2], 10);
+        const ampm = match[3].toUpperCase();
+        if (ampm === "PM" && h !== 12) h += 12;
+        if (ampm === "AM" && h === 12) h = 0;
+        return h * 60 + m;
+      };
+
+      const getSoonestDelta = (row: UnifiedRow) => {
+        let minDelta = Infinity;
         for (const t of row.timesDisplay) {
           if (t.status === "upcoming") {
-            const match = t.label.match(/(\d+):(\d+)\s*(AM|PM)/i);
-            if (match) {
-              let h = parseInt(match[1]);
-              const m = parseInt(match[2]);
-              if (match[3].toUpperCase() === "PM" && h !== 12) h += 12;
-              if (match[3].toUpperCase() === "AM" && h === 12) h = 0;
-              min = Math.min(min, h * 60 + m);
-            }
+            const mins = parseLabelToMin(t.label);
+            if (mins === Infinity) continue;
+            const delta = ((mins - currentMin) % 1440 + 1440) % 1440;
+            if (delta > 0 && delta < minDelta) minDelta = delta;
           }
         }
-        return min;
+        return minDelta;
       };
-      return getEarliest(a) - getEarliest(b);
+
+      return getSoonestDelta(a) - getSoonestDelta(b);
     });
 
     return { ongoing, upcoming, finished };

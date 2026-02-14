@@ -56,11 +56,11 @@ export function ScheduleTable({ items, label, status }: Props) {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border text-muted-foreground font-display text-xs uppercase tracking-wider">
-              <th className="text-left px-4 py-2">Name</th>
-              <th className="text-left px-4 py-2 hidden sm:table-cell">Location</th>
-              <th className="text-left px-4 py-2 hidden md:table-cell whitespace-nowrap">Map</th>
-              <th className="text-left px-4 py-2 w-[40%]">Your Time</th>
-              <th className="text-left px-4 py-2 hidden lg:table-cell lg:w-[30%]">Server Time</th>
+              <th className="text-left px-4 py-2 w-[14%]">Name</th>
+              <th className="text-left px-4 py-2 hidden sm:table-cell w-[14%]">Location</th>
+              <th className="text-left px-4 py-2 hidden md:table-cell whitespace-nowrap w-[12%]">Map</th>
+              <th className="text-left px-4 py-2 w-[30%]">Your Time</th>
+              <th className="text-left px-4 py-2 hidden lg:table-cell w-[30%]">Server Time</th>
             </tr>
           </thead>
           <tbody>
@@ -102,11 +102,11 @@ export function ScheduleTable({ items, label, status }: Props) {
                     <span className="font-display text-s font-semibold text-gold-dark">{row.world}</span>
                   ) : "—"}
                 </td>
-                <td className="px-4 py-2.5 w-[40%]">
-                  <div className="flex flex-wrap gap-1">
+                <td className="px-4 py-2.5 w-[30%]">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-1">
                     {yourTimes.map((t, j) => (
                       <span key={j} className={cn(
-                        "inline-block px-1.5 py-0.5 rounded text-xs",
+                        "inline-block px-1.5 py-0.5 rounded text-xs text-center",
                         t.status === "ongoing" && "bg-ongoing/20 text-ongoing-foreground font-bold",
                         // for the upcoming table, highlight the per-row next upcoming time
                         status === "upcoming" && t.status === "upcoming" && t.isNext && "bg-upcoming/30 font-bold ring-1 ring-upcoming/50",
@@ -119,11 +119,11 @@ export function ScheduleTable({ items, label, status }: Props) {
                     ))}
                   </div>
                 </td>
-                <td className="px-4 py-2.5 hidden lg:table-cell lg:w-[30%]">
-                  <div className="flex flex-wrap gap-1">
+                <td className="px-4 py-2.5 hidden lg:table-cell w-[30%]">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-1">
                     {row.timesDisplay.map((t, j) => (
                       <span key={j} className={cn(
-                        "inline-block px-1.5 py-0.5 rounded text-xs",
+                        "inline-block px-1.5 py-0.5 rounded text-xs text-center",
                         t.status === "ongoing" && "bg-ongoing/20 text-ongoing-foreground font-bold",
                         status === "upcoming" && t.status === "upcoming" && t.isNext && "bg-upcoming/30 font-bold ring-1 ring-upcoming/50",
                         !t.isNext && t.status === "upcoming" && "text-upcoming-foreground font-semibold opacity-30",

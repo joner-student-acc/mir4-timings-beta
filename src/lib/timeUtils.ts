@@ -1,4 +1,4 @@
-export type ServerRegion = "ASIA" | "INMENA" | "MENA" | "EU" | "SA" | "NA";
+export type ServerRegion = "ASIA" | "INMENA" | "EU" | "SA" | "NA";
 
 export interface ServerInfo {
   label: string;
@@ -8,7 +8,6 @@ export interface ServerInfo {
 export const servers: Record<ServerRegion, ServerInfo> = {
   ASIA: { label: "ASIA (UTC+8)", utcOffset: 8 },
   INMENA: { label: "INDIA / INMENA (UTC+6)", utcOffset: 6 },
-  MENA: { label: "MENA (UTC+3)", utcOffset: 3 },
   EU: { label: "EU / Europe (UTC+2)", utcOffset: 2 },
   SA: { label: "SA / South America (UTC-3)", utcOffset: -3 },
   NA: { label: "NA / North America (UTC-4)", utcOffset: -4 },

@@ -2,7 +2,8 @@ export interface BossEntry {
   world: string;
   map: string;
   boss: string;
-  times: string[]; // "HH:MM" in 24h PH time
+  times: string[]; // "HH:MM" in 24h server-local time (spawns at same time across all servers)
+  baseServerOffset?: number; // optional: if present, times are stored as Manila viewing times authored for this base server (UTC offset)
 }
 
 export interface EventEntry {
@@ -15,6 +16,7 @@ export interface EventEntry {
   endMin: number;
   world?: string; // optional world/location for filtering
   daysOfWeek?: number[]; // 0=Sun .. 6=Sat, based on server day
+  baseServerOffset?: number; // optional: the UTC offset where these event times were authored (default: 2 / EU)
 }
 
 // Helper to parse "7:00 AM" -> "07:00"
@@ -74,12 +76,12 @@ export const worldBosses: BossEntry[] = [
   { world: "L3-W6", map: "Phantom Woods", boss: "Wuihan", times: ["11:30 AM", "5:30 PM", "11:30 PM", "5:30 AM"].map(p) },
   { world: "L3-W6", map: "Bicheon Labyrinth", boss: "Obscene Yeticlops", times: ["12:30 PM", "6:30 PM", "12:30 AM", "6:30 AM"].map(p) },
   // Special Areas
-  { world: "Purgatory", map: "Purgatory", boss: "Purgatory", times: ["6:00 AM", "12:00 PM", "6:00 PM", "12:00 AM"].map(p) },
-  { world: "Labyrinth", map: "Labyrinth", boss: "Labyrinth WB", times: ["4:00 PM", "2:00 AM"].map(p) },
-  { world: "Valley", map: "Valley", boss: "Valley WB", times: ["6:00 PM", "4:00 AM"].map(p) },
-  { world: "W1/W7/W4", map: "Mirage", boss: "Mirage WB", times: ["4:00 AM"].map(p) },
-  { world: "W8/W2/W5", map: "Mirage", boss: "Mirage WB", times: ["6:00 AM"].map(p) },
-  { world: "Magic Square", map: "Leaders III", boss: "Leaders III Boss", times: ["5:00 AM", "8:00 AM", "11:00 AM", "2:00 PM", "5:00 PM", "8:00 PM", "11:00 PM", "2:00 AM"].map(p) },
+  { world: "Purg", map: "Purgatory", boss: "Purgatory", times: ["6:00 AM", "12:00 PM", "6:00 PM", "12:00 AM"].map(p) },
+  { world: "Lab", map: "Labyrinth", boss: "Labyrinth WB", times: ["4:00 PM", "2:00 AM"].map(p) },
+  { world: "Valley", map: "Valley", boss: "Valley WB", times: ["6:00 PM", "4:00 AM"].map(p), baseServerOffset: 2 },
+  { world: "W1/w7/W2/W3", map: "Mirage", boss: "Mirage WB", times: ["4:00 AM"].map(p), baseServerOffset: 2 },
+  { world: "W8/W4/W5/w6", map: "Mirage", boss: "Mirage WB", times: ["6:00 AM"].map(p), baseServerOffset: 2 },
+  { world: "MS", map: "Leaders III", boss: "Leaders III Boss", times: ["5:00 AM", "8:00 AM", "11:00 AM", "2:00 PM", "5:00 PM", "8:00 PM", "11:00 PM", "2:00 AM"].map(p) },
   { world: "SP", map: "South", boss: "SP Red Boss", times: ["6:00 AM", "12:00 PM", "6:00 PM", "12:00 AM"].map(p) },
   { world: "SP", map: "North", boss: "SP Red Boss", times: ["9:00 AM", "3:00 PM", "9:00 PM", "3:00 AM"].map(p) },
 ];
@@ -88,26 +90,24 @@ export const worldBosses: BossEntry[] = [
 applyRotationToAll(worldBosses);
 
 export const events: EventEntry[] = [
-  { name: "1st Domi", period: "DOMI-1", times: "9 AM – 1 PM", startHour: 9, startMin: 0, endHour: 13, endMin: 0, world: "Domi" },
-  { name: "1st Domi 1st LW", period: "LW1-1", times: "10 AM – 10:30 AM", startHour: 10, startMin: 0, endHour: 10, endMin: 30, world: "TOWER" },
-  { name: "1st Domi 2nd LW", period: "LW1-2", times: "12 PM – 12:30 PM", startHour: 12, startMin: 0, endHour: 12, endMin: 30, world: "TOWER" },
-  { name: "1st Domi Juja", period: "DOMI-1-JUJA", times: "11 AM – 11:30 AM", startHour: 11, startMin: 0, endHour: 11, endMin: 30, world: "TOWER" },
+  { name: "1st Domi Entry", period: "Domi Server", times: "3:00 PM – 7:00 PM", startHour: 15, startMin: 0, endHour: 19, endMin: 0, world: "DOMI", baseServerOffset: 2 },
+  { name: "1st Domi Entry | 1st LW", period: "Domi Tower", times: "4:00 PM – 4:30 PM", startHour: 16, startMin: 0, endHour: 16, endMin: 30, world: "LW1-1", baseServerOffset: 2 },
+  { name: "1st Domi Entry | Juja", period: "Domi Tower", times: "5:00 PM", startHour: 17, startMin: 0, endHour: 17, endMin: 0, world: "JUJA", baseServerOffset: 2 },
+  { name: "1st Domi Entry | 2nd LW", period: "Domi Tower", times: "6:00 PM – 6:30 PM", startHour: 18, startMin: 0, endHour: 18, endMin: 30, world: "LW1-2", baseServerOffset: 2 },
 
-  { name: "2nd Domi", period: "DOMI-2", times: "3 PM – 7 PM", startHour: 15, startMin: 0, endHour: 19, endMin: 0, world: "Domi" },
-  { name: "2nd Domi 1st LW", period: "LW2-1", times: "4 PM – 4:30 PM", startHour: 16, startMin: 0, endHour: 16, endMin: 30, world: "TOWER" },
-  { name: "2nd Domi 2nd LW", period: "LW2-2", times: "6 PM – 6:30 PM", startHour: 18, startMin: 0, endHour: 18, endMin: 30, world: "TOWER" },
-  { name: "2nd Domi Juja", period: "DOMI-2-JUJA", times: "5 PM – 5:30 PM", startHour: 17, startMin: 0, endHour: 17, endMin: 30, world: "TOWER" },
+  { name: "2nd Domi Entry", period: "Domi Server", times: "9:00 PM – 1:00 AM", startHour: 21, startMin: 0, endHour: 1, endMin: 0, world: "DOMI", baseServerOffset: 2 },
+  { name: "2nd Domi Entry | 1st LW", period: "Domi Tower", times: "10:00 PM – 10:30 PM", startHour: 22, startMin: 0, endHour: 22, endMin: 30, world: "LW2-1", baseServerOffset: 2 },
+  { name: "2nd Domi Entry | Juja", period: "Domi Tower", times: "11:00 PM", startHour: 23, startMin: 0, endHour: 23, endMin: 0, world: "JUJA", baseServerOffset: 2 },
+  { name: "2nd Domi Entry | 2nd LW", period: "Domi Tower", times: "12:00 AM – 12:30 AM", startHour: 0, startMin: 0, endHour: 0, endMin: 30, world: "LW2-2", baseServerOffset: 2 },
 
+  { name: "3rd Domi Entry", period: "Domi Server", times: "3:00 AM – 7:00 AM", startHour: 3, startMin: 0, endHour: 7, endMin: 0, world: "DOMI", baseServerOffset: 2 },
+  { name: "3rd Domi Entry | 1st LW", period: "Domi Tower", times: "4:00 AM – 4:30 AM", startHour: 4, startMin: 0, endHour: 4, endMin: 30, world: "LW3-1", baseServerOffset: 2 },
+  { name: "3rd Domi Entry | Juja", period: "Domi Tower", times: "5:00 AM", startHour: 5, startMin: 0, endHour: 5, endMin: 0, world: "JUJA", baseServerOffset: 2 },
+  { name: "3rd Domi Entry | 2nd LW", period: "Domi Tower", times: "6:00 AM – 6:30 AM", startHour: 6, startMin: 0, endHour: 6, endMin: 30, world: "LW3-2", baseServerOffset: 2 },
 
-
-  { name: "3rd Domi", period: "DOMI-3", times: "9 PM – 1 AM", startHour: 21, startMin: 0, endHour: 1, endMin: 0, world: "Domi" },
-  { name: "3rd Domi 1st LW", period: "LW3-1", times: "10 PM – 10:30 PM", startHour: 22, startMin: 0, endHour: 22, endMin: 30, world: "TOWER" },
-  { name: "3rd Domi 2nd LW", period: "LW3-2", times: "12 AM – 12:30 PM", startHour: 0, startMin: 0, endHour: 0, endMin: 30, world: "TOWER" },
-  { name: "3rd Domi Juja", period: "DOMI-3-JUJA", times: "11 PM – 11:30 PM", startHour: 23, startMin: 0, endHour: 23, endMin: 30, world: "TOWER" },
-
-  { name: "Server Expedition", times: "10:00 PM – 11:00 PM", startHour: 22, startMin: 0, endHour: 23, endMin: 0, world: "Server" },
-  { name: "Valley War", times: "9:00 PM – 10:00 PM", startHour: 21, startMin: 0, endHour: 22, endMin: 0, world: "Valley", daysOfWeek: [3] },
-  { name: "Mirage Living Wraith", times: "9:00 PM – 10:00 PM", startHour: 21, startMin: 0, endHour: 22, endMin: 0, world: "Mirage", daysOfWeek: [4] },
+  { name: "Server Expedition", times: "3:00 AM – 7:00 AM", startHour: 3, startMin: 0, endHour: 7, endMin: 0, world: "Server" },
+  { name: "Valley War", times: "4:00 AM – 5:00 AM", startHour: 4, startMin: 0, endHour: 5, endMin: 0, world: "Valley", daysOfWeek: [3] },
+  // { name: "Mirage Living Wraith", times: ":00 PM – 10:00 PM", startHour: 21, startMin: 0, endHour: 22, endMin: 0, world: "Mirage", daysOfWeek: [4] },
 ];
 
 // Unified schedule combining boss spawns and events. Consumers can iterate
@@ -118,4 +118,4 @@ export const schedule = [
   ...events,
 ];
 
-export const allWorlds = ["W1", "W2", "W3", "W4", "W5", "W6", "W7"] as const;
+// export const allWorlds = ["W1", "W2", "W3", "W4", "W5", "W6", "W7"] as const;

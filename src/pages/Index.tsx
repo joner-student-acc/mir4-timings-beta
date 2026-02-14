@@ -10,16 +10,40 @@ import {
 import type { UnifiedRow } from "@/types/schedule";
 
 function getEventStatus(event: EventEntry, currentMin: number, viewOffset: number, srvOffset: number): ScheduleStatus {
-  // Event times are stored as server-local hours. Convert them to viewing
-  // timezone and then decide status based on viewing current minutes.
+  // Event times are stored in a base server timezone (default UTC+8 / Manila).
+  // Conversion rules:
+  // 1) Treat event start/end as in `baseOffset` (default 8).
+  // 2) Convert baseOffset -> selected server (`srvOffset`) to get server-local time.
+  // 3) Convert server-local -> viewing (`viewOffset`) to get displayed viewing time.
   const pad = (n: number) => String(n).padStart(2, "0");
-  const serverStart = `${pad(event.startHour)}:${pad(event.startMin)}`;
-  const serverEnd = `${pad(event.endHour)}:${pad(event.endMin)}`;
+  // Stored event times are the viewing times as seen in Manila (UTC+8)
+  // and were authored for a base server (default EU UTC+2).
+  const baseServer = event.baseServerOffset ?? 2; // default EU
+  const storedViewStart = `${pad(event.startHour)}:${pad(event.startMin)}`; // viewing time in Manila
+  const storedViewEnd = `${pad(event.endHour)}:${pad(event.endMin)}`;
 
+  // Convert stored viewing (Manila) -> server-local time on the base server
+  const serverTimeOnBaseStart = convertTime(storedViewStart, 8, baseServer);
+  const serverTimeOnBaseEnd = convertTime(storedViewEnd, 8, baseServer);
+
+  // The spawn local time is the same across servers (same wallclock),
+  // so server-local time for the selected server is the same numeric time.
+  const serverStart = serverTimeOnBaseStart;
+  const serverEnd = serverTimeOnBaseEnd;
+
+  // Finally convert selected server -> viewing
   const viewStartStr = convertTime(serverStart, srvOffset, viewOffset);
   const viewEndStr = convertTime(serverEnd, srvOffset, viewOffset);
+
   const start = ((parseInt(viewStartStr.split(":")[0], 10) * 60) + parseInt(viewStartStr.split(":")[1], 10)) % 1440;
   const end = ((parseInt(viewEndStr.split(":")[0], 10) * 60) + parseInt(viewEndStr.split(":")[1], 10)) % 1440;
+
+  const isPoint = (storedViewStart === storedViewEnd);
+  if (isPoint) {
+    if (currentMin === start) return "ongoing";
+    if (currentMin < start) return "upcoming";
+    return "finished";
+  }
 
   if (end <= start) {
     if (currentMin >= start || currentMin < end) return "ongoing";
@@ -40,9 +64,20 @@ function formatEventTimes(event: EventEntry, viewOffset: number, srvOffset: numb
   };
 
   const pad = (n: number) => String(n).padStart(2, "0");
-  const serverStart = `${pad(event.startHour)}:${pad(event.startMin)}`;
-  const serverEnd = `${pad(event.endHour)}:${pad(event.endMin)}`;
+  // Stored event times are the viewing times as seen in Manila (UTC+8)
+  // and were authored for a base server (default EU UTC+2).
+  const baseServer = event.baseServerOffset ?? 2;
+  const storedViewStart = `${pad(event.startHour)}:${pad(event.startMin)}`;
+  const storedViewEnd = `${pad(event.endHour)}:${pad(event.endMin)}`;
 
+  // Convert stored viewing -> server-local on base server
+  const serverTimeOnBaseStart = convertTime(storedViewStart, 8, baseServer);
+  const serverTimeOnBaseEnd = convertTime(storedViewEnd, 8, baseServer);
+
+  const serverStart = serverTimeOnBaseStart;
+  const serverEnd = serverTimeOnBaseEnd;
+
+  // Convert selected server -> viewing
   const viewStart = convertTime(serverStart, srvOffset, viewOffset);
   const viewEnd = convertTime(serverEnd, srvOffset, viewOffset);
 
@@ -124,10 +159,25 @@ const Index = () => {
       if (worldFilter !== "ALL" && b.world !== worldFilter) return;
       if (searchLower && !b.boss.toLowerCase().includes(searchLower) && !b.map.toLowerCase().includes(searchLower)) return;
 
-      // Boss times are stored in PH time (UTC+8). Convert from PH -> viewing and PH -> selected server
-      const PH_OFFSET = 8;
-      const convertedView = b.times.map((t: string) => convertTime(t, PH_OFFSET, viewingOffset));
-      const convertedServer = b.times.map((t: string) => convertTime(t, PH_OFFSET, serverOffset));
+      // Boss times may either be:
+      // - server-local times (default): t is server-local and should be converted from selected server -> viewing
+      // - stored as Manila viewing times authored for a base server (when `b.baseServerOffset` is present):
+      //   treat t as viewing time in Manila (UTC+8), convert Manila -> baseServer to get server-local clock,
+      //   then treat that clock as the server-local time for all servers and convert selected server -> viewing.
+      const baseServer = b.baseServerOffset as number | undefined;
+      let convertedView: string[];
+      let convertedServer: string[];
+      if (typeof baseServer === "number") {
+        // times are stored as Manila viewing times authored for baseServer
+        const serverTimesOnBase = b.times.map((t: string) => convertTime(t, 8, baseServer)); // Manila(8) -> base server
+        // serverTimesOnBase is the server-local clock; selected server uses same wallclock
+        convertedServer = serverTimesOnBase.map((t: string) => t);
+        convertedView = serverTimesOnBase.map((t: string) => convertTime(t, serverOffset, viewingOffset));
+      } else {
+        // default behavior: times are server-local
+        convertedView = b.times.map((t: string) => convertTime(t, serverOffset, viewingOffset));
+        convertedServer = b.times;
+      }
       const statuses = getTimesStatuses(convertedView, currentMin);
 
       // Build timesDisplay and mark the earliest upcoming time as `isNext`

@@ -101,7 +101,10 @@ function loadFromStorage<T>(key: string, fallback: T): T {
 const Index = () => {
   const [worldFilter, setWorldFilter] = useState("ALL");
   const [search, setSearch] = useState("");
-  const [server, setServer] = useState<ServerRegion>(() => loadFromStorage("mir4-server", "ASIA"));
+  const [server, setServer] = useState<ServerRegion>(() => {
+    const stored = loadFromStorage<string>("mir4-server", "ASIA");
+    return (stored in servers) ? stored as ServerRegion : "ASIA";
+  });
   const [viewingMode, setViewingMode] = useState<string>(() => loadFromStorage("mir4-viewing-mode", AUTO_DETECT_VALUE));
   const [viewingOffset, setViewingOffset] = useState<number>(() => {
     const mode = loadFromStorage("mir4-viewing-mode", AUTO_DETECT_VALUE);

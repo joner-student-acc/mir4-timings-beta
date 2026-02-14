@@ -1,4 +1,4 @@
-import { allWorlds } from "@/data/scheduleData";
+
 import { getServerDate, ServerRegion, servers, viewingTimezones, formatUtcOffset, AUTO_DETECT_VALUE, detectLocalUtcOffset } from "@/lib/timeUtils";
 import { useEffect, useState } from "react";
 

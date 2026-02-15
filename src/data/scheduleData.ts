@@ -77,7 +77,7 @@ export const worldBosses: BossEntry[] = [
   { world: "L3-W6", map: "Bicheon Labyrinth", boss: "Obscene Yeticlops", times: ["12:30 PM", "6:30 PM", "12:30 AM", "6:30 AM"].map(p) },
   // Special Areas
   { world: "Purg", map: "Purgatory", boss: "Purgatory", times: ["6:00 AM", "12:00 PM", "6:00 PM", "12:00 AM"].map(p) },
-  { world: "Lab", map: "Labyrinth", boss: "Labyrinth WB", times: ["4:00 PM", "2:00 AM"].map(p) },
+  { world: "Lab", map: "Labyrinth", boss: "Labyrinth WB", times: ["4:00 PM", "2:00 AM"].map(p), baseServerOffset: 2 },
   { world: "Valley", map: "Valley", boss: "Valley WB", times: ["6:00 PM", "4:00 AM"].map(p), baseServerOffset: 2 },
   { world: "W1/w7/W2/W3", map: "Mirage", boss: "Mirage WB", times: ["4:00 AM"].map(p), baseServerOffset: 2 },
   { world: "W8/W4/W5/w6", map: "Mirage", boss: "Mirage WB", times: ["6:00 AM"].map(p), baseServerOffset: 2 },

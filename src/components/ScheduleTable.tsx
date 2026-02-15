@@ -113,7 +113,7 @@ export function ScheduleTable({ items, label, status }: Props) {
                         !t.isNext && t.status === "upcoming" && "bg-upcoming/15 text-upcoming-foreground font-semibold",
                         t.status === "finished" && "bg-upcoming/15 font-semibold",
                       )}>
-                        {(status === "upcoming" && t.status === "upcoming" && t.isNext) && <span className="mr-0.5">▶</span>}
+                        {(status === "upcoming" && t.isNext && i === nextRowIdx) && <span className="mr-0.5">▶</span>}
                         {t.label}
                       </span>
                     ))}

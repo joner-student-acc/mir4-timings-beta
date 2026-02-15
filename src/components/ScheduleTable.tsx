@@ -12,15 +12,12 @@ interface Props {
 export function ScheduleTable({ items, label, status }: Props) {
   if (items.length === 0) return null;
 
-  // For upcoming table, find the single globally-next time across all rows
-  let nextRowIdx = -1;
-  let nextTimeIdx = -1;
-  let earliestMin = Infinity;
+  // For upcoming table, find the globally soonest upcoming minute
+  let globalEarliestMin = Infinity;
   if (status === "upcoming") {
-    items.forEach((row, ri) => {
-      row.timesDisplay.forEach((t, ti) => {
+    items.forEach((row) => {
+      row.timesDisplay.forEach((t) => {
         if (t.status === "upcoming") {
-          // Parse the label to get approximate minutes for comparison
           const match = t.label.match(/(\d+):(\d+)\s*(AM|PM)/i);
           if (match) {
             let h = parseInt(match[1]);
@@ -29,16 +26,30 @@ export function ScheduleTable({ items, label, status }: Props) {
             if (ampm === "PM" && h !== 12) h += 12;
             if (ampm === "AM" && h === 12) h = 0;
             const mins = h * 60 + m;
-            if (mins < earliestMin) {
-              earliestMin = mins;
-              nextRowIdx = ri;
-              nextTimeIdx = ti;
-            }
+            if (mins < globalEarliestMin) globalEarliestMin = mins;
           }
         }
       });
     });
   }
+
+  // Check if a row's earliest upcoming time matches the global soonest
+  const rowHasGlobalNext = (row: UnifiedRow) => {
+    for (const t of row.timesDisplay) {
+      if (t.status === "upcoming" && t.isNext) {
+        const match = t.label.match(/(\d+):(\d+)\s*(AM|PM)/i);
+        if (match) {
+          let h = parseInt(match[1]);
+          const m = parseInt(match[2]);
+          const ampm = match[3].toUpperCase();
+          if (ampm === "PM" && h !== 12) h += 12;
+          if (ampm === "AM" && h === 12) h = 0;
+          return h * 60 + m === globalEarliestMin;
+        }
+      }
+    }
+    return false;
+  };
 
   return (
     <div className="card-border rounded-lg overflow-hidden bg-card">
@@ -104,19 +115,21 @@ export function ScheduleTable({ items, label, status }: Props) {
                 </td>
                 <td className="px-4 py-2.5 w-[30%]">
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-1">
-                    {yourTimes.map((t, j) => (
-                      <span key={j} className={cn(
-                        "inline-block px-1.5 py-0.5 rounded text-xs text-center",
-                        t.status === "ongoing" && "bg-ongoing/20 text-ongoing-foreground font-bold",
-                        // for the upcoming table, highlight the per-row next upcoming time
-                        status === "upcoming" && t.status === "upcoming" && t.isNext && "bg-upcoming/30 font-bold ring-1 ring-upcoming/50",
-                        !t.isNext && t.status === "upcoming" && "bg-upcoming/15 text-upcoming-foreground font-semibold",
-                        t.status === "finished" && "bg-upcoming/15 font-semibold",
-                      )}>
-                        {(status === "upcoming" && t.status === "upcoming" && t.isNext) && <span className="mr-0.5">▶</span>}
-                        {t.label}
-                      </span>
-                    ))}
+                    {yourTimes.map((t, j) => {
+                      const showArrow = status === "upcoming" && t.status === "upcoming" && t.isNext && rowHasGlobalNext(row);
+                      return (
+                        <span key={j} className={cn(
+                          "inline-block px-1.5 py-0.5 rounded text-xs text-center",
+                          t.status === "ongoing" && "bg-ongoing/20 text-ongoing-foreground font-bold",
+                          status === "upcoming" && t.status === "upcoming" && showArrow && "bg-upcoming/30 font-bold ring-1 ring-upcoming/50",
+                          !showArrow && t.status === "upcoming" && "bg-upcoming/15 text-upcoming-foreground font-semibold",
+                          t.status === "finished" && "bg-upcoming/15 font-semibold",
+                        )}>
+                          {showArrow && <span className="mr-0.5">▶</span>}
+                          {t.label}
+                        </span>
+                      );
+                    })}
                   </div>
                 </td>
                 <td className="px-4 py-2.5 hidden lg:table-cell w-[30%]">

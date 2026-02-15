@@ -7,37 +7,54 @@ interface Props {
   items: UnifiedRow[];
   label: string;
   status: ScheduleStatus;
+  currentMin: number;
 }
 
-export function ScheduleTable({ items, label, status }: Props) {
+export function ScheduleTable({ items, label, status, currentMin }: Props) {
   if (items.length === 0) return null;
 
-  // For upcoming table, find the single globally-next time across all rows
-  let nextRowIdx = -1;
-  let nextTimeIdx = -1;
-  let earliestMin = Infinity;
+  const parseLabelToMin = (label: string): number | null => {
+    const match = label.match(/(\d+):(\d+)\s*(AM|PM)/i);
+    if (!match) return null;
+    let h = parseInt(match[1], 10);
+    const m = parseInt(match[2], 10);
+    const ampm = match[3].toUpperCase();
+    if (ampm === "PM" && h !== 12) h += 12;
+    if (ampm === "AM" && h === 12) h = 0;
+    return h * 60 + m;
+  };
+
+  // For upcoming table, find the single globally-next time across all rows (after conversion)
+  let nextDelta = Infinity;
   if (status === "upcoming") {
-    items.forEach((row, ri) => {
-      row.timesDisplay.forEach((t, ti) => {
-        if (t.status === "upcoming") {
-          // Parse the label to get approximate minutes for comparison
-          const match = t.label.match(/(\d+):(\d+)\s*(AM|PM)/i);
-          if (match) {
-            let h = parseInt(match[1]);
-            const m = parseInt(match[2]);
-            const ampm = match[3].toUpperCase();
-            if (ampm === "PM" && h !== 12) h += 12;
-            if (ampm === "AM" && h === 12) h = 0;
-            const mins = h * 60 + m;
-            if (mins < earliestMin) {
-              earliestMin = mins;
-              nextRowIdx = ri;
-              nextTimeIdx = ti;
-            }
-          }
-        }
+    items.forEach((row) => {
+      row.timesDisplay.forEach((t) => {
+        if (t.status !== "upcoming") return;
+        const mins = parseLabelToMin(t.label);
+        if (mins === null) return;
+        const delta = ((mins - currentMin) % 1440 + 1440) % 1440;
+        if (delta > 0 && delta < nextDelta) nextDelta = delta;
       });
     });
+  }
+  const hasGlobalNext = Number.isFinite(nextDelta);
+
+  // Find the last row index that contains the global next time
+  let lastRowWithNext = -1;
+  if (status === "upcoming" && hasGlobalNext) {
+    for (let i = items.length - 1; i >= 0; i--) {
+      const hasNext = items[i].timesDisplay.some((t) => {
+        if (t.status !== "upcoming") return false;
+        const mins = parseLabelToMin(t.label);
+        if (mins === null) return false;
+        const delta = ((mins - currentMin) % 1440 + 1440) % 1440;
+        return delta > 0 && delta === nextDelta;
+      });
+      if (hasNext) {
+        lastRowWithNext = i;
+        break;
+      }
+    }
   }
 
   return (
@@ -65,22 +82,11 @@ export function ScheduleTable({ items, label, status }: Props) {
           </thead>
           <tbody>
             {items.map((row, i) => {
-              const parseLabelToMin = (label: string) => {
-                const m = label.match(/(\d+):(\d+)\s*(AM|PM)/i);
-                if (!m) return 0;
-                let hh = parseInt(m[1], 10);
-                const mm = parseInt(m[2], 10);
-                const ampm = m[3].toUpperCase();
-                if (ampm === "PM" && hh !== 12) hh += 12;
-                if (ampm === "AM" && hh === 12) hh = 0;
-                return hh * 60 + mm;
-              };
-
               // sort Your Time starting from 6:00 AM (wraps around)
               const startBase = 6 * 60;
               const yourTimes = row.timesDisplay.slice().sort((a, b) => {
-                const aa = (parseLabelToMin(a.label) - startBase + 1440) % 1440;
-                const bb = (parseLabelToMin(b.label) - startBase + 1440) % 1440;
+                const aa = ((parseLabelToMin(a.label) ?? 0) - startBase + 1440) % 1440;
+                const bb = ((parseLabelToMin(b.label) ?? 0) - startBase + 1440) % 1440;
                 return aa - bb;
               });
 
@@ -88,6 +94,7 @@ export function ScheduleTable({ items, label, status }: Props) {
                 <tr key={i} className={cn(
                   "border-b border-border/50 transition-colors",
                   row.rowStatus === "ongoing" && "bg-ongoing/5",
+                  status === "upcoming" && i === lastRowWithNext && "border-b-2 border-b-upcoming/60",
                 )}>
                 <td className="px-4 py-2.5 font-semibold text-foreground">
                   {row.name}
@@ -104,34 +111,54 @@ export function ScheduleTable({ items, label, status }: Props) {
                 </td>
                 <td className="px-4 py-2.5 w-[30%]">
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-1">
-                    {yourTimes.map((t, j) => (
-                      <span key={j} className={cn(
-                        "inline-block px-1.5 py-0.5 rounded text-xs text-center",
-                        t.status === "ongoing" && "bg-ongoing/20 text-ongoing-foreground font-bold",
-                        // for the upcoming table, highlight the per-row next upcoming time
-                        status === "upcoming" && t.status === "upcoming" && t.isNext && "bg-upcoming/30 font-bold ring-1 ring-upcoming/50",
-                        !t.isNext && t.status === "upcoming" && "bg-upcoming/15 text-upcoming-foreground font-semibold",
-                        t.status === "finished" && "bg-upcoming/15 font-semibold",
-                      )}>
-                        {(status === "upcoming" && t.status === "upcoming" && t.isNext) && <span className="mr-0.5">▶</span>}
-                        {t.label}
-                      </span>
-                    ))}
+                    {yourTimes.map((t, j) => {
+                      const mins = parseLabelToMin(t.label);
+                      const delta = mins === null ? Infinity : ((mins - currentMin) % 1440 + 1440) % 1440;
+                      const highlightFuture = status === "upcoming" && delta > 0;
+                      const isGlobalNext = status === "upcoming"
+                        && t.status === "upcoming"
+                        && hasGlobalNext
+                        && delta > 0
+                        && delta === nextDelta;
+
+                      return (
+                        <span key={j} className={cn(
+                          "inline-block px-1.5 py-0.5 rounded text-xs text-center",
+                          t.status === "ongoing" && "bg-ongoing/20 text-ongoing-foreground font-bold",
+                          status === "upcoming" && isGlobalNext && "bg-upcoming/30 font-bold ring-1 ring-upcoming/50",
+                          (!isGlobalNext && t.status === "upcoming") && "bg-upcoming/30 text-upcoming-foreground font-semibold",
+                          t.status === "finished" && (highlightFuture ? "bg-upcoming/15 text-upcoming-foreground font-semibold" : "bg-upcoming/15 font-semibold"),
+                        )}>
+                          {isGlobalNext && <span className="mr-0.5">▶</span>}
+                          {t.label}
+                        </span>
+                      );
+                    })}
                   </div>
                 </td>
                 <td className="px-4 py-2.5 hidden lg:table-cell w-[30%]">
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-1">
-                    {row.timesDisplay.map((t, j) => (
-                      <span key={j} className={cn(
-                        "inline-block px-1.5 py-0.5 rounded text-xs text-center",
-                        t.status === "ongoing" && "bg-ongoing/20 text-ongoing-foreground font-bold",
-                        status === "upcoming" && t.status === "upcoming" && t.isNext && "bg-upcoming/30 font-bold ring-1 ring-upcoming/50",
-                        !t.isNext && t.status === "upcoming" && "text-upcoming-foreground font-semibold opacity-30",
-                        t.status === "finished" && "text-upcoming-foreground opacity-30 font-semibold",
-                      )}>
-                        {t.serverLabel}
-                      </span>
-                    ))}
+                    {row.timesDisplay.map((t, j) => {
+                      const mins = parseLabelToMin(t.label);
+                      const delta = mins === null ? Infinity : ((mins - currentMin) % 1440 + 1440) % 1440;
+                      const isGlobalNext = status === "upcoming"
+                        && t.status === "upcoming"
+                        && hasGlobalNext
+                        && delta > 0
+                        && delta === nextDelta;
+
+                      return (
+                        <span key={j} className={cn(
+                          "inline-block px-1.5 py-0.5 rounded text-xs text-center",
+                          t.status === "ongoing" && "bg-ongoing/20 text-ongoing-foreground font-bold",
+                          status === "upcoming" && isGlobalNext && "bg-upcoming/30 font-bold ring-1 ring-upcoming/50",
+                          !isGlobalNext && t.status === "upcoming" && "text-upcoming-foreground font-semibold opacity-30",
+                          t.status === "finished" && "text-upcoming-foreground opacity-30 font-semibold",
+                        )}>
+                          {t.serverLabel}
+                        </span>
+                      );
+                    })}
                   </div>
                 </td>
               </tr>

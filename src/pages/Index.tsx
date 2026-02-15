@@ -5,9 +5,14 @@ import { ScheduleTable } from "@/components/ScheduleTable";
 import {
   convertTime, formatTime, getTimesStatuses, getRowStatus,
   getServerDate, getServerTime, ScheduleStatus, ServerRegion, servers, formatUtcOffset,
-  AUTO_DETECT_VALUE, detectLocalUtcOffset,
+  AUTO_DETECT_VALUE, detectLocalUtcOffset, convertBaseToServerToView,
 } from "@/lib/timeUtils";
 import type { UnifiedRow } from "@/types/schedule";
+
+function parseHM(time: string): { h: number; m: number } {
+  const [h, m] = time.split(":").map(Number);
+  return { h, m };
+}
 
 function getEventStatus(event: EventEntry, currentMin: number, viewOffset: number, srvOffset: number): ScheduleStatus {
   // Event times are stored in a base server timezone (default UTC+8 / Manila).
@@ -32,8 +37,22 @@ function getEventStatus(event: EventEntry, currentMin: number, viewOffset: numbe
   const serverEnd = serverTimeOnBaseEnd;
 
   // Finally convert selected server -> viewing
-  const viewStartStr = convertTime(serverStart, srvOffset, viewOffset);
-  const viewEndStr = convertTime(serverEnd, srvOffset, viewOffset);
+  const serverStartParts = parseHM(serverStart);
+  const serverEndParts = parseHM(serverEnd);
+  const { viewTime: viewStartStr } = convertBaseToServerToView(
+    serverStartParts.h,
+    serverStartParts.m,
+    srvOffset,
+    srvOffset,
+    viewOffset
+  );
+  const { viewTime: viewEndStr } = convertBaseToServerToView(
+    serverEndParts.h,
+    serverEndParts.m,
+    srvOffset,
+    srvOffset,
+    viewOffset
+  );
 
   const start = ((parseInt(viewStartStr.split(":")[0], 10) * 60) + parseInt(viewStartStr.split(":")[1], 10)) % 1440;
   const end = ((parseInt(viewEndStr.split(":")[0], 10) * 60) + parseInt(viewEndStr.split(":")[1], 10)) % 1440;
@@ -78,8 +97,22 @@ function formatEventTimes(event: EventEntry, viewOffset: number, srvOffset: numb
   const serverEnd = serverTimeOnBaseEnd;
 
   // Convert selected server -> viewing
-  const viewStart = convertTime(serverStart, srvOffset, viewOffset);
-  const viewEnd = convertTime(serverEnd, srvOffset, viewOffset);
+  const serverStartParts = parseHM(serverStart);
+  const serverEndParts = parseHM(serverEnd);
+  const { viewTime: viewStart } = convertBaseToServerToView(
+    serverStartParts.h,
+    serverStartParts.m,
+    srvOffset,
+    srvOffset,
+    viewOffset
+  );
+  const { viewTime: viewEnd } = convertBaseToServerToView(
+    serverEndParts.h,
+    serverEndParts.m,
+    srvOffset,
+    srvOffset,
+    viewOffset
+  );
 
   const isPoint = event.startHour === event.endHour && event.startMin === event.endMin;
 
@@ -172,10 +205,16 @@ const Index = () => {
         const serverTimesOnBase = b.times.map((t: string) => convertTime(t, 8, baseServer)); // Manila(8) -> base server
         // serverTimesOnBase is the server-local clock; selected server uses same wallclock
         convertedServer = serverTimesOnBase.map((t: string) => t);
-        convertedView = serverTimesOnBase.map((t: string) => convertTime(t, serverOffset, viewingOffset));
+        convertedView = serverTimesOnBase.map((t: string) => {
+          const { h, m } = parseHM(t);
+          return convertBaseToServerToView(h, m, serverOffset, serverOffset, viewingOffset).viewTime;
+        });
       } else {
         // default behavior: times are server-local
-        convertedView = b.times.map((t: string) => convertTime(t, serverOffset, viewingOffset));
+        convertedView = b.times.map((t: string) => {
+          const { h, m } = parseHM(t);
+          return convertBaseToServerToView(h, m, serverOffset, serverOffset, viewingOffset).viewTime;
+        });
         convertedServer = b.times;
       }
       const statuses = getTimesStatuses(convertedView, currentMin);
@@ -282,9 +321,9 @@ const Index = () => {
         setViewingMode={setViewingMode}
       />
       <main className="container py-6 space-y-6">
-        <ScheduleTable items={grouped.ongoing} label="Ongoing Now" status="ongoing" />
-        <ScheduleTable items={grouped.upcoming} label="Upcoming" status="upcoming" />
-        <ScheduleTable items={grouped.finished} label="Finished" status="finished" />
+        <ScheduleTable items={grouped.ongoing} label="Ongoing Now" status="ongoing" currentMin={currentMin} />
+        <ScheduleTable items={grouped.upcoming} label="Upcoming" status="upcoming" currentMin={currentMin} />
+        <ScheduleTable items={grouped.finished} label="Finished" status="finished" currentMin={currentMin} />
 
         {rows.length === 0 && (
           <p className="text-center text-muted-foreground py-8 font-body text-lg">No entries match your filter.</p>

@@ -107,6 +107,22 @@ export function convertTime(time: string, fromOffset: number, toOffset: number):
 }
 
 /**
+ * Convert a base-local time to selected server time, then to viewing time.
+ */
+export function convertBaseToServerToView(
+  baseHour: number,
+  baseMin: number,
+  baseOffset: number,
+  serverOffset: number,
+  viewOffset: number
+): { serverTime: string; viewTime: string } {
+  const baseTime = `${String(baseHour).padStart(2, "0")}:${String(baseMin).padStart(2, "0")}`;
+  const serverTime = convertTime(baseTime, baseOffset, serverOffset);
+  const viewTime = convertTime(serverTime, serverOffset, viewOffset);
+  return { serverTime, viewTime };
+}
+
+/**
  * Format "HH:MM" 24h to "h:MM AM/PM"
  */
 export function formatTime(time: string): string {

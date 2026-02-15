@@ -126,7 +126,7 @@ export function ScheduleTable({ items, label, status, currentMin }: Props) {
                           "inline-block px-1.5 py-0.5 rounded text-xs text-center",
                           t.status === "ongoing" && "bg-ongoing/20 text-ongoing-foreground font-bold",
                           status === "upcoming" && isGlobalNext && "bg-upcoming/30 font-bold ring-1 ring-upcoming/50",
-                          (!isGlobalNext && t.status === "upcoming") && "bg-upcoming/30 text-upcoming-foreground font-semibold",
+                          (!isGlobalNext && t.status === "upcoming") && (status === "upcoming" ? "bg-upcoming/30 text-upcoming-foreground font-semibold" : "bg-upcoming/15 text-upcoming-foreground font-semibold"),
                           t.status === "finished" && (highlightFuture ? "bg-upcoming/15 text-upcoming-foreground font-semibold" : "bg-upcoming/15 font-semibold"),
                         )}>
                           {isGlobalNext && <span className="mr-0.5">▶</span>}
@@ -138,7 +138,7 @@ export function ScheduleTable({ items, label, status, currentMin }: Props) {
                 </td>
                 <td className="px-4 py-2.5 hidden lg:table-cell w-[30%]">
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-1">
-                    {row.timesDisplay.map((t, j) => {
+                    {yourTimes.map((t, j) => {
                       const mins = parseLabelToMin(t.label);
                       const delta = mins === null ? Infinity : ((mins - currentMin) % 1440 + 1440) % 1440;
                       const isGlobalNext = status === "upcoming"
@@ -152,7 +152,7 @@ export function ScheduleTable({ items, label, status, currentMin }: Props) {
                           "inline-block px-1.5 py-0.5 rounded text-xs text-center",
                           t.status === "ongoing" && "bg-ongoing/20 text-ongoing-foreground font-bold",
                           status === "upcoming" && isGlobalNext && "bg-upcoming/30 font-bold ring-1 ring-upcoming/50",
-                          !isGlobalNext && t.status === "upcoming" && "text-upcoming-foreground font-semibold opacity-30",
+                          !isGlobalNext && t.status === "upcoming" && (status === "upcoming" ? "bg-upcoming/30 text-upcoming-foreground font-semibold" : "text-upcoming-foreground font-semibold opacity-30"),
                           t.status === "finished" && "text-upcoming-foreground opacity-30 font-semibold",
                         )}>
                           {t.serverLabel}

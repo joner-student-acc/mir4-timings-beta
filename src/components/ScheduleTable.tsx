@@ -8,10 +8,35 @@ interface Props {
   label: string;
   status: ScheduleStatus;
   currentMin: number;
+  use24h: boolean;
+  setUse24h: (v: boolean) => void;
 }
 
-export function ScheduleTable({ items, label, status, currentMin }: Props) {
+export function ScheduleTable({ items, label, status, currentMin, use24h, setUse24h }: Props) {
   if (items.length === 0) return null;
+
+  /** Convert "h:MM AM/PM" to "HH:MM" 24h or keep as-is */
+  const fmt = (ampmLabel: string): string => {
+    if (!use24h) return ampmLabel;
+    // handle range labels like "1:00 PM – 2:00 PM"
+    return ampmLabel.replace(/(\d{1,2}):(\d{2})\s*(AM|PM)/gi, (_match, h, m, ap) => {
+      let hour = parseInt(h, 10);
+      const isPM = ap.toUpperCase() === "PM";
+      if (isPM && hour !== 12) hour += 12;
+      if (!isPM && hour === 12) hour = 0;
+      return `${String(hour).padStart(2, "0")}:${m}`;
+    });
+  };
+
+  const TimeFormatBtn = () => (
+    <button
+      onClick={() => setUse24h(!use24h)}
+      className="ml-auto text-[10px] px-1.5 py-0.5 rounded border border-border bg-secondary text-muted-foreground hover:text-foreground hover:bg-accent transition-colors font-display uppercase tracking-wider"
+      title={use24h ? "Switch to 12-hour format" : "Switch to 24-hour format"}
+    >
+      {use24h ? "24H" : "12H"}
+    </button>
+  );
 
   const parseLabelToMin = (label: string): number | null => {
     const match = label.match(/(\d+):(\d+)\s*(AM|PM)/i);
@@ -76,8 +101,12 @@ export function ScheduleTable({ items, label, status, currentMin }: Props) {
               <th className="text-left px-4 py-2 w-[14%]">Name</th>
               <th className="text-left px-4 py-2 hidden sm:table-cell w-[14%]">Location</th>
               <th className="text-left px-4 py-2 hidden md:table-cell whitespace-nowrap w-[12%]">Map</th>
-              <th className="text-left px-4 py-2 w-[30%]">Your Time</th>
-              <th className="text-left px-4 py-2 hidden lg:table-cell w-[30%]">Server Time</th>
+              <th className="text-left px-4 py-2 w-[30%]">
+                <span className="flex items-center gap-1">Your Time <TimeFormatBtn /></span>
+              </th>
+              <th className="text-left px-4 py-2 hidden lg:table-cell w-[30%]">
+                <span className="flex items-center gap-1">Server Time <TimeFormatBtn /></span>
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -130,7 +159,7 @@ export function ScheduleTable({ items, label, status, currentMin }: Props) {
                           t.status === "finished" && (highlightFuture ? "bg-upcoming/15 text-upcoming-foreground font-semibold" : "bg-upcoming/15 font-semibold"),
                         )}>
                           {isGlobalNext && <span className="mr-0.5">▶</span>}
-                          {t.label}
+                          {fmt(t.label)}
                         </span>
                       );
                     })}
@@ -155,7 +184,7 @@ export function ScheduleTable({ items, label, status, currentMin }: Props) {
                           !isGlobalNext && t.status === "upcoming" && (status === "upcoming" ? "bg-upcoming/30 text-upcoming-foreground font-semibold" : "text-upcoming-foreground font-semibold opacity-30"),
                           t.status === "finished" && "text-upcoming-foreground opacity-30 font-semibold",
                         )}>
-                          {t.serverLabel}
+                          {fmt(t.serverLabel)}
                         </span>
                       );
                     })}

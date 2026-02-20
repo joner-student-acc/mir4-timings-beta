@@ -64,7 +64,7 @@ export function ScheduleHeader({
           <div className="flex flex-col sm:flex-row sm:items-center gap-2">
             <div className="flex-1 min-w-0">
               <h1 className="text-xl sm:text-2xl font-display font-bold text-gold gold-glow tracking-wide">
-                MIR4 Timing Guide
+                MIR4 Timing Guide <span className="text-sm sm:text-base">by Striker丶</span>
               </h1>
               <p className="text-sm text-muted-foreground font-body">
                 Server Time: <span className="text-gold-light font-semibold">{servers[server].label} — {serverTimeStr}</span>

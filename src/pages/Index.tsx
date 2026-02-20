@@ -141,6 +141,7 @@ const Index = () => {
     if (mode === AUTO_DETECT_VALUE) return detectLocalUtcOffset();
     return loadFromStorage("mir4-viewing-offset", 8);
   });
+const [use24h, setUse24h] = useState<boolean>(() => loadFromStorage("mir4-use24h", false));
   const [, setTick] = useState(0);
   useEffect(() => {
     localStorage.setItem("mir4-server", JSON.stringify(server));
@@ -149,6 +150,10 @@ const Index = () => {
   useEffect(() => {
     localStorage.setItem("mir4-viewing-offset", JSON.stringify(viewingOffset));
   }, [viewingOffset, viewingMode]);
+
+  useEffect(() => {
+    localStorage.setItem("mir4-use24h", JSON.stringify(use24h));
+  }, [use24h]);
 
   useEffect(() => {
     const interval = setInterval(() => setTick((t) => t + 1), 30000);
@@ -321,9 +326,9 @@ const Index = () => {
         setViewingMode={setViewingMode}
       />
       <main className="container py-6 space-y-6">
-        <ScheduleTable items={grouped.ongoing} label="Ongoing Now" status="ongoing" currentMin={currentMin} />
-        <ScheduleTable items={grouped.upcoming} label="Upcoming" status="upcoming" currentMin={currentMin} />
-        <ScheduleTable items={grouped.finished} label="Finished" status="finished" currentMin={currentMin} />
+        <ScheduleTable items={grouped.ongoing} label="Ongoing Now" status="ongoing" currentMin={currentMin} use24h={use24h} setUse24h={setUse24h} />
+        <ScheduleTable items={grouped.upcoming} label="Upcoming" status="upcoming" currentMin={currentMin} use24h={use24h} setUse24h={setUse24h} />
+        <ScheduleTable items={grouped.finished} label="Finished" status="finished" currentMin={currentMin} use24h={use24h} setUse24h={setUse24h} />
 
         {rows.length === 0 && (
           <p className="text-center text-muted-foreground py-8 font-body text-lg">No entries match your filter.</p>

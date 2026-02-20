@@ -8,17 +8,18 @@ interface Props {
   label: string;
   status: ScheduleStatus;
   currentMin: number;
-  use24h: boolean;
-  setUse24h: (v: boolean) => void;
+  use24hYour: boolean;
+  setUse24hYour: (v: boolean) => void;
+  use24hServer: boolean;
+  setUse24hServer: (v: boolean) => void;
 }
 
-export function ScheduleTable({ items, label, status, currentMin, use24h, setUse24h }: Props) {
+export function ScheduleTable({ items, label, status, currentMin, use24hYour, setUse24hYour, use24hServer, setUse24hServer }: Props) {
   if (items.length === 0) return null;
 
   /** Convert "h:MM AM/PM" to "HH:MM" 24h or keep as-is */
-  const fmt = (ampmLabel: string): string => {
-    if (!use24h) return ampmLabel;
-    // handle range labels like "1:00 PM – 2:00 PM"
+  const fmt = (ampmLabel: string, is24h: boolean): string => {
+    if (!is24h) return ampmLabel;
     return ampmLabel.replace(/(\d{1,2}):(\d{2})\s*(AM|PM)/gi, (_match, h, m, ap) => {
       let hour = parseInt(h, 10);
       const isPM = ap.toUpperCase() === "PM";
@@ -28,13 +29,13 @@ export function ScheduleTable({ items, label, status, currentMin, use24h, setUse
     });
   };
 
-  const TimeFormatBtn = () => (
+  const TimeFormatBtn = ({ is24h, toggle }: { is24h: boolean; toggle: () => void }) => (
     <button
-      onClick={() => setUse24h(!use24h)}
+      onClick={toggle}
       className="ml-auto text-[10px] px-1.5 py-0.5 rounded border border-border bg-secondary text-muted-foreground hover:text-foreground hover:bg-accent transition-colors font-display uppercase tracking-wider"
-      title={use24h ? "Switch to 12-hour format" : "Switch to 24-hour format"}
+      title={is24h ? "Switch to 12-hour format" : "Switch to 24-hour format"}
     >
-      {use24h ? "24H" : "12H"}
+      {is24h ? "24H" : "12H"}
     </button>
   );
 
@@ -102,10 +103,10 @@ export function ScheduleTable({ items, label, status, currentMin, use24h, setUse
               <th className="text-left px-4 py-2 hidden sm:table-cell w-[14%]">Location</th>
               <th className="text-left px-4 py-2 hidden md:table-cell whitespace-nowrap w-[12%]">Map</th>
               <th className="text-left px-4 py-2 w-[30%]">
-                <span className="flex items-center gap-1">Your Time <TimeFormatBtn /></span>
+                <span className="flex items-center gap-1">Your Time <TimeFormatBtn is24h={use24hYour} toggle={() => setUse24hYour(!use24hYour)} /></span>
               </th>
               <th className="text-left px-4 py-2 hidden lg:table-cell w-[30%]">
-                <span className="flex items-center gap-1">Server Time <TimeFormatBtn /></span>
+                <span className="flex items-center gap-1">Server Time <TimeFormatBtn is24h={use24hServer} toggle={() => setUse24hServer(!use24hServer)} /></span>
               </th>
             </tr>
           </thead>
@@ -159,7 +160,7 @@ export function ScheduleTable({ items, label, status, currentMin, use24h, setUse
                           t.status === "finished" && (highlightFuture ? "bg-upcoming/15 text-upcoming-foreground font-semibold" : "bg-upcoming/15 font-semibold"),
                         )}>
                           {isGlobalNext && <span className="mr-0.5">▶</span>}
-                          {fmt(t.label)}
+                          {fmt(t.label, use24hYour)}
                         </span>
                       );
                     })}
@@ -184,7 +185,7 @@ export function ScheduleTable({ items, label, status, currentMin, use24h, setUse
                           !isGlobalNext && t.status === "upcoming" && (status === "upcoming" ? "bg-upcoming/30 text-upcoming-foreground font-semibold" : "text-upcoming-foreground font-semibold opacity-30"),
                           t.status === "finished" && "text-upcoming-foreground opacity-30 font-semibold",
                         )}>
-                          {fmt(t.serverLabel)}
+                          {fmt(t.serverLabel, use24hServer)}
                         </span>
                       );
                     })}

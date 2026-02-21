@@ -82,7 +82,7 @@ export const worldBosses: BossEntry[] = [
   { world: "W1/w7/W2/W3", map: "Mirage", boss: "Mirage WB", times: ["4:00 AM"].map(p), baseServerOffset: 2 },
   { world: "W8/W4/W5/w6", map: "Mirage", boss: "Mirage WB", times: ["6:00 AM"].map(p), baseServerOffset: 2 },
   { world: "MS", map: "Leaders III", boss: "Leaders III Boss", times: ["6:00 AM", "9:00 AM", "12:00 PM", "3:00 PM", "6:00 PM", "9:00 PM", "12:00 AM", "3:00 AM"].map(p) },
-  { world: "SP", map: "South", boss: "SP Red Boss", times: ["7:00 AM", "1:00 PM", "7:00 PM", "1:00 AM"].map(p) },
+  { world: "SP", map: "South", boss: "SP Red Boss", times: ["1:00 AM", "7:00 PM", "1:00 PM", "7:00 AM"].map(p) },
   { world: "SP", map: "North", boss: "SP Red Boss", times: ["10:00 AM", "4:00 PM", "10:00 PM", "4:00 AM"].map(p) },
 ];
 

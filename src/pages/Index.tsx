@@ -340,7 +340,8 @@ const Index = () => {
 
         <footer className="text-center py-8 text-muted-foreground text-md font-body">
           <div className="ornament-line mx-auto w-32 mb-3" />
-          <p>MIR4 Timing Guide by <a className="underline text-upcoming-foreground" href="https://discord.com/users/1311568159966494800" target="_blank" rel="noreferrer">Striker丶</a> · © 2026 All rights reserved.</p>
+          <p>MIR4 Timing Guide by Striker丶· © 2026 All rights reserved.</p>
+          <p>Suggestions? Msg me on <a className="underline text-upcoming-foreground" href="https://discord.com/users/1311568159966494800" target="_blank" rel="noreferrer">Discord</a></p>
         </footer>
       </main>
     </div>
